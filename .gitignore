@@ -1,0 +1,30 @@
+# Build
+bin/
+obj/
+
+# Rider
+.idea/
+
+# Visual Studio
+.vs/
+
+# Node
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.*
+
+# ASP.NET Core
+appsettings.Development.json
+
+# Publish
+publish/
+
+# OS Files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="AIPortfolio.API/AIPortfolio.API.csproj" />
+  <Project Path="AIPortfolio.Application/AIPortfolio.Application.csproj" />
+  <Project Path="AIPortfolio.Domain/AIPortfolio.Domain.csproj" />
+  <Project Path="AIPortfolio.Infrastructure/AIPortfolio.Infrastructure.csproj" />
+  <Project Path="AIPortfolio.Persistence/AIPortfolio.Persistence.csproj" />
+</Solution>
