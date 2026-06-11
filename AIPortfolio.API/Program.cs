@@ -22,6 +22,19 @@ builder.Services.AddPersistence(builder.Configuration);
 
 builder.Services.AddEndpointMappers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend",
+        policy =>
+        {
+            policy
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                .WithOrigins("http://localhost:5173");
+        });
+});
+
 JwtSettings jwtSettings =
     builder.Configuration
         .GetSection("JwtSettings")
@@ -63,6 +76,7 @@ if (app.Environment.IsDevelopment())
 
     app.MapScalarApiReference();
 }
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 

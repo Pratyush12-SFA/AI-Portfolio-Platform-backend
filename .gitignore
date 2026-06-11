@@ -4,12 +4,20 @@ obj/
 
 # Rider
 .idea/
+*.DotSettings.user
+*.sln.iml
 
 # Visual Studio
 .vs/
+*.user
+*.suo
 
 # Node
 node_modules/
+.npm/
+.next/
+dist/
+build/
 
 # Logs
 logs/
@@ -21,10 +29,34 @@ logs/
 
 # ASP.NET Core
 appsettings.Development.json
+appsettings.*.local.json
 
 # Publish
 publish/
 
+# Test Results
+TestResults/
+coverage/
+coverage-report/
+
+# NuGet
+*.nupkg
+packages/
+
 # OS Files
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# SQL Server
+*.mdf
+*.ldf
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+
+# JetBrains
+_ReSharper*/
+*.ReSharper

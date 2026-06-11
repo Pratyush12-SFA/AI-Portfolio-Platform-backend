@@ -10,7 +10,10 @@ public sealed class User : AuditEntity
 
     public required string Email { get; set; } 
 
-    public required string PasswordHash { get; set; } 
+    public string? PasswordHash { get; set; } 
 
     public bool IsActive { get; set; }
+    public string? GoogleId { get; set; }
+    public string? ProfilePictureUrl { get; set; }
+    public bool IsEmailVerified { get; set; }
 }

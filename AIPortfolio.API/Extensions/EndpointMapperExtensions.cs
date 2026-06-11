@@ -11,6 +11,9 @@ public static class EndpointMapperExtensions
         services.AddSingleton<IEndpointMapper,
             LoginEndpointMapper>();
 
+        services.AddSingleton<IEndpointMapper, RegisterEndpointMapper>();
+        services.AddSingleton<IEndpointMapper, GoogleLoginEndpointMapper>();
+
         return services;
     }
 

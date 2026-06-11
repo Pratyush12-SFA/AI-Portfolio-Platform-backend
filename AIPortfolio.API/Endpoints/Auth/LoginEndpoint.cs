@@ -1,6 +1,7 @@
 ﻿using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Application.DTOs.Auth;
-using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
+using FluentValidation.Results;
 
 namespace AIPortfolio.API.Endpoints.Auth;
 
@@ -8,8 +9,17 @@ internal static class LoginEndpoint
 {
     public static async Task<IResult> PostLogin(
         LoginRequest loginRequest,
-        IAuthService authSerivce)
+        IAuthService authSerivce,
+        IValidator <LoginRequest> loginValidator)
+
     {
+        ValidationResult validationResult =
+            await loginValidator.ValidateAsync(loginRequest);
+        if (!validationResult.IsValid)
+        {
+            return Results.ValidationProblem(
+                validationResult.ToDictionary());
+        }
         LoginResponse? response =
             await authSerivce.LoginAsync(loginRequest);
 

@@ -1,4 +1,6 @@
-﻿namespace AIPortfolio.Application.Abstractions;
+﻿using AIPortfolio.Domain.Entites;
+
+namespace AIPortfolio.Application.Abstractions;
 public interface IUserInfoAccessor
 {
     long UserId { get; }
