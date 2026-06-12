@@ -10,15 +10,23 @@ public sealed class GoogleAuthService : IGoogleAuthService
     private readonly IUserRepository _userRepository;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IUserInfoAccessor _userInfoAccessor;
+    private readonly IRefreshTokenGenerator _refreshTokenGenerator;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
 
     public GoogleAuthService(
         IUserRepository userRepository,
         IJwtTokenGenerator jwtTokenGenerator,
-        IUserInfoAccessor userInfoAccessor)
+        IUserInfoAccessor userInfoAccessor,
+        IRefreshTokenGenerator refreshTokenGenerator,
+        IRefreshTokenRepository refreshTokenRepository
+        )
     {
         _userRepository =  userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _jwtTokenGenerator = jwtTokenGenerator ?? throw new ArgumentNullException(nameof(jwtTokenGenerator));
         _userInfoAccessor = userInfoAccessor  ?? throw new ArgumentNullException(nameof(userInfoAccessor));
+        _refreshTokenRepository = refreshTokenRepository
+                                  ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
+        _refreshTokenGenerator = refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
     }
     
     public async Task<LoginResponse?>LoginAsync(
@@ -58,10 +66,28 @@ public sealed class GoogleAuthService : IGoogleAuthService
                 user.Id,
                 user.Email,
                 user.FullName);
+        string refreshToken =
+            _refreshTokenGenerator.Generate();
+        await _refreshTokenRepository.CreateAsync(
+            new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refreshToken,
+
+                ExpiresAt =
+                    DateTime.UtcNow.AddDays(30),
+
+                CreatedBy =
+                    user.Email,
+
+                CreatedFromIp =
+                    _userInfoAccessor.GetRemoteIp()
+            });
 
         return new LoginResponse
         {
             AccessToken = token,
+            RefreshToken = refreshToken,
             Email = user.Email,
             FullName = user.FullName
         };

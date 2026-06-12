@@ -10,16 +10,21 @@ public sealed class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IUserInfoAccessor _userInfoAccessor;
+    private readonly IRefreshTokenGenerator _refreshTokenGenerator;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
 
     public AuthService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator, IUserInfoAccessor userInfoAccessor)
+        IJwtTokenGenerator jwtTokenGenerator, IUserInfoAccessor userInfoAccessor,
+        IRefreshTokenGenerator refreshTokenGenerator, IRefreshTokenRepository refreshTokenRepository)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
         _userInfoAccessor = userInfoAccessor;
+        _refreshTokenGenerator = refreshTokenGenerator;
+        _refreshTokenRepository = refreshTokenRepository;
     }
 
     public async Task<LoginResponse?> LoginAsync(
@@ -49,9 +54,21 @@ public sealed class AuthService : IAuthService
                 user.Id,
                 user.Email,
                 user.FullName);
+        string refreshToken =
+            _refreshTokenGenerator.Generate();
+        await _refreshTokenRepository.CreateAsync(
+            new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refreshToken,
+                ExpiresAt = DateTime.Now.AddDays(30),
+                CreatedBy = user.FullName,
+                CreatedFromIp = _userInfoAccessor.GetRemoteIp()
+            });
         return new LoginResponse
         {
             AccessToken = token,
+            RefreshToken =  refreshToken,
             Email = user.Email,
             FullName = user.FullName
         };
@@ -85,9 +102,20 @@ public sealed class AuthService : IAuthService
             id,
             user.Email,
             user.FullName);
+        string refreshToken = _refreshTokenGenerator.Generate();
+        await _refreshTokenRepository.CreateAsync(
+            new RefreshToken
+            {
+                UserId = id,
+                Token = refreshToken,
+                ExpiresAt = DateTime.Now.AddDays(30),
+                CreatedBy = user.FullName,
+                CreatedFromIp = _userInfoAccessor.GetRemoteIp()
+            });
         return new LoginResponse
         {
             AccessToken = token,
+            RefreshToken = refreshToken,
             Email = user.Email,
             FullName = user.FullName
         };
