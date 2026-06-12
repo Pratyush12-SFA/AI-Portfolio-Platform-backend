@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         
         services.AddScoped<IUserInfoAccessor, UserInfoAccessor>();
+        services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
 
         return services;
     }
