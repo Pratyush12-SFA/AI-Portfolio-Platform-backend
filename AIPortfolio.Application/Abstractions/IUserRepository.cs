@@ -5,6 +5,7 @@ namespace AIPortfolio.Application.Abstractions;
 public interface IUserRepository
 {
     Task<User?> GetByEmailAsync(string email);
+    Task<User?> GetByIdAsync(long id);
     Task<bool> ExistsByEmailAsync(string email);
     Task<long> CreateAsync(User user, string createdBy,
         string createdFromIp);

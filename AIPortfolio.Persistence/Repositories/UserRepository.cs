@@ -32,6 +32,19 @@ internal sealed class UserRepository : IUserRepository
                 commandType: CommandType.StoredProcedure);
     }
 
+    public async Task<User?> GetByIdAsync(long id)
+    {
+        using IDbConnection connection =
+            _context.CreateConnection();
+        return await connection.QueryFirstOrDefaultAsync<User>(
+            "Identity.usp_User_GetById",
+            new
+            {
+                Id = id
+            },
+            commandType: CommandType.StoredProcedure);
+    }
+
     public async Task<bool> ExistsByEmailAsync(string email)
     {
         using IDbConnection connection = _context.CreateConnection();

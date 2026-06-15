@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(
             typeof(DependencyInjection).Assembly);
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
         return services;
     }

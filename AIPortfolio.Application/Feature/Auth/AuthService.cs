@@ -92,7 +92,8 @@ public sealed class AuthService : IAuthService
             FullName = registerRequest.FullName,
             PasswordHash = passwordHash,
             Email = registerRequest.Email,
-            IsActive = true
+            IsActive = true,
+            CreatedBy = registerRequest.FullName
         };
         long id = await _userRepository.CreateAsync(user,
             _userInfoAccessor.GetUserName(),
@@ -102,7 +103,7 @@ public sealed class AuthService : IAuthService
             id,
             user.Email,
             user.FullName);
-        string refreshToken = _refreshTokenGenerator.Generate();
+        string refreshToken = _refreshTokenGenerator.Generate();    
         await _refreshTokenRepository.CreateAsync(
             new RefreshToken
             {

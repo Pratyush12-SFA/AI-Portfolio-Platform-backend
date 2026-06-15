@@ -13,6 +13,7 @@ public static class EndpointMapperExtensions
 
         services.AddSingleton<IEndpointMapper, RegisterEndpointMapper>();
         services.AddSingleton<IEndpointMapper, GoogleLoginEndpointMapper>();
+        services.AddSingleton<IEndpointMapper, RefreshTokenEndpointMapper>();
 
         return services;
     }
