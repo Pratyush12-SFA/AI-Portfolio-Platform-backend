@@ -7,7 +7,9 @@ internal static class GoogleLoginEndpoint
 {
     public static async Task<IResult> PostGoogleLogin(
         GoogleLoginRequest request,
-        IGoogleAuthService googleAuthService)
+        IGoogleAuthService googleAuthService,
+        ICookieService cookieService,
+        HttpContext httpContext)
     {
         LoginResponse? response =
             await googleAuthService.LoginAsync(request);
@@ -16,6 +18,14 @@ internal static class GoogleLoginEndpoint
         {
             return Results.Unauthorized();
         }
-        return Results.Ok(response);
+        cookieService.SetRefreshTokenCookie(
+            httpContext.Response,
+            response.RefreshToken);
+        return Results.Ok(new
+        {
+            response.AccessToken,
+            response.Email,
+            response.FullName,
+        });
     }
 }

@@ -10,6 +10,8 @@ internal static class LoginEndpoint
     public static async Task<IResult> PostLogin(
         LoginRequest loginRequest,
         IAuthService authSerivce,
+        ICookieService cookieService,
+        HttpContext httpContext,
         IValidator <LoginRequest> loginValidator)
 
     {
@@ -25,10 +27,19 @@ internal static class LoginEndpoint
 
         if (response is null)
         {
-            return TypedResults.Unauthorized();
+            return Results.Unauthorized();
         }
+        cookieService.SetRefreshTokenCookie(
+            httpContext.Response,
+            response.RefreshToken);
         
-        return TypedResults.Ok(response);
+        return Results.Ok(
+            new
+            {
+                response.AccessToken,
+                response.Email,
+                response.FullName,
+            });
     }
     public static IResult GetMe(
         HttpContext httpContext)

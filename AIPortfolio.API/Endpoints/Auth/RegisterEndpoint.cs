@@ -10,6 +10,8 @@ internal static class RegisterEndpoint
     public static async Task<IResult> PostRegister(
         RegisterRequest registerRequest,
         IAuthService authService,
+        ICookieService cookieService,
+        HttpContext httpContext,
         IValidator<RegisterRequest> requestValidator)
     {
         ValidationResult validationResult = 
@@ -24,9 +26,18 @@ internal static class RegisterEndpoint
 
         if (response is null)
         {
-            return Results.Conflict("User already exists");
+            return Results.BadRequest("User already exists");
         }
+        cookieService.SetRefreshTokenCookie(
+            httpContext.Response,
+            response.RefreshToken);
 
-        return Results.Ok(response);
+        return Results.Ok(
+            new
+            {
+                response.AccessToken,
+                response.Email,
+                response.FullName,
+            });
     }
 }
