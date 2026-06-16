@@ -108,4 +108,20 @@ internal sealed class UserRepository : IUserRepository
             },
             commandType: CommandType.StoredProcedure);
     }
+    public async Task LinkGoogleAccountAsync(
+        long userId,
+        string googleId)
+    {
+        using IDbConnection connection =
+            _context.CreateConnection();
+
+        await connection.ExecuteAsync(
+            "Identity.usp_User_LinkGoogleAccount",
+            new
+            {
+                UserId = userId,
+                GoogleId = googleId
+            },
+            commandType: CommandType.StoredProcedure);
+    }
 }

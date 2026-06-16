@@ -15,6 +15,7 @@ public static class DependencyInjection
             typeof(DependencyInjection).Assembly);
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<ILogoutService, LogoutService>();
 
         return services;
     }

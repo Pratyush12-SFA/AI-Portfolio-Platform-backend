@@ -39,26 +39,42 @@ public sealed class GoogleAuthService : IGoogleAuthService
         User? user =
             await _userRepository.GetByGoogleIdAsync(
                 payload.Subject);
+        
 
         if (user is null)
         {
-            user = new User
+            User? existingUser =
+                await _userRepository.GetByEmailAsync(
+                    payload.Email);
+
+            if (existingUser is not null)
             {
-                FullName = payload.Name,
-                Email = payload.Email,
-                GoogleId = payload.Subject,
-                ProfilePictureUrl = payload.Picture,
-                IsEmailVerified = true,
-                IsActive = true
-            };
+                await _userRepository.LinkGoogleAccountAsync(
+                    existingUser.Id,
+                    payload.Subject);
 
-            long userId =
-                await _userRepository.CreateGoogleUserAsync(
-                    user,
-                    payload.Email,
-                    _userInfoAccessor.GetRemoteIp());
+                user = existingUser;
+            }
+            else
+            {
+                user = new User
+                {
+                    FullName = payload.Name,
+                    Email = payload.Email,
+                    GoogleId = payload.Subject,
+                    ProfilePictureUrl = payload.Picture,
+                    IsEmailVerified = true,
+                    IsActive = true
+                };
 
-            user.Id = userId;
+                long userId =
+                    await _userRepository.CreateGoogleUserAsync(
+                        user,
+                        payload.Email,
+                        _userInfoAccessor.GetRemoteIp());
+
+                user.Id = userId;
+            }
         }
 
         string token =
