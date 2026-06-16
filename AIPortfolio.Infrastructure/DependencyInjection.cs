@@ -21,6 +21,7 @@ public static class DependencyInjection
         
         services.AddScoped<IUserInfoAccessor, UserInfoAccessor>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
+        services.AddScoped<ICookieService, CookieService>();
 
         return services;
     }

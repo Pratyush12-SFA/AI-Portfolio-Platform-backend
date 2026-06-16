@@ -1,5 +1,4 @@
 ﻿using AIPortfolio.Application.Abstractions;
-using AIPortfolio.Application.DTOs.Auth;
 
 namespace AIPortfolio.API.Endpoints.Auth;
 
@@ -7,11 +6,21 @@ internal static class LogoutEndpoint
 {
     public static async Task<IResult>
         PostLogout(
-            LogoutRequest request,
-            ILogoutService logoutService)
+            ICookieService cookieService,
+            HttpContext httpContext,
+           IRefreshTokenRepository refreshTokenRepository)
     {
-        await logoutService
-            .LogoutAsync(request);
+        string? refreshToken = cookieService.GetRefreshTokenCookie(
+            httpContext.Request);
+        if (!string.IsNullOrWhiteSpace(refreshToken))
+        {
+            await refreshTokenRepository.RemoveAsync(refreshToken,
+                "SYSTEM");
+        }
+        
+        cookieService.DeleteRefreshTokenCookie(
+            httpContext.Response);
+       
 
         return Results.Ok();
     }
