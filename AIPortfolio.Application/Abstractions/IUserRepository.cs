@@ -15,4 +15,8 @@ public interface IUserRepository
         User user,
         string createdBy,
         string createdFromIp);
+
+    Task LinkGoogleAccountAsync(
+        long id,
+        string googleId);
 }
