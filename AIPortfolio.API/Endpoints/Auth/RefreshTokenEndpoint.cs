@@ -10,6 +10,7 @@ internal static class RefreshTokenEndpoint
         ICookieService cookieService,
         IRefreshTokenService refreshTokenService)
     {
+        
         string? refreshToken =
             cookieService.GetRefreshTokenCookie(
                 httpContext.Request);
@@ -34,12 +35,14 @@ internal static class RefreshTokenEndpoint
 
         cookieService.SetRefreshTokenCookie(
             httpContext.Response,
-            response.RefreshToken);
+            response.RefreshToken,
+            true);
 
         return Results.Ok(
             new
             {
                 response.AccessToken
             });
+        
     }
 }

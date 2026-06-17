@@ -16,6 +16,7 @@ internal sealed class RegisterEndpointMapper : IEndpointMapper
                 RegisterEndpoint.PostRegister)
             .AllowAnonymous()
             .WithName("Register")
+            .RequireRateLimiting("AuthPolicy")
             .WithDescription("Register a new user.");
     }
 }

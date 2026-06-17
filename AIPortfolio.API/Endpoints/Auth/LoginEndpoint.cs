@@ -31,7 +31,8 @@ internal static class LoginEndpoint
         }
         cookieService.SetRefreshTokenCookie(
             httpContext.Response,
-            response.RefreshToken);
+            response.RefreshToken,
+            loginRequest.RememberMe);
         
         return Results.Ok(
             new
