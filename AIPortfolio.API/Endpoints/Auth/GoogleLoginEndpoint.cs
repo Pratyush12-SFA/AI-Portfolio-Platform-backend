@@ -20,7 +20,8 @@ internal static class GoogleLoginEndpoint
         }
         cookieService.SetRefreshTokenCookie(
             httpContext.Response,
-            response.RefreshToken);
+            response.RefreshToken,
+            true);
         return Results.Ok(new
         {
             response.AccessToken,

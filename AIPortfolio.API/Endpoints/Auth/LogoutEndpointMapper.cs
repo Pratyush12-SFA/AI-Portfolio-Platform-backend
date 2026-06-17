@@ -17,6 +17,7 @@ internal sealed class LogoutEndpointMapper : IEndpointMapper
             .WithName("Logout")
             .WithDescription("Logout to portfolio application")
             .AllowAnonymous()
+            .RequireRateLimiting("AuthPolicy")
             .RequireAuthorization();
     } 
 }

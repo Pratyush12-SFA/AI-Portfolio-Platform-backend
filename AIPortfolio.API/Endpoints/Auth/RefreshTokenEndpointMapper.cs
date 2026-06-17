@@ -15,6 +15,7 @@ internal sealed class RefreshTokenEndpointMapper : IEndpointMapper
             .WithName("refresh-token")
             .WithDescription("refresh-token details")
             .AllowAnonymous()
+            .RequireRateLimiting("AuthPolicy")
             .RequireAuthorization();
     }
 }

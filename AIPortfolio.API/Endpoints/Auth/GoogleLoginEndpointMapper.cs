@@ -13,6 +13,7 @@ internal sealed class GoogleLoginEndpointMapper : IEndpointMapper
         googleAuthGroup.MapPost("google-login", GoogleLoginEndpoint.PostGoogleLogin)
             .WithDisplayName("google-login")
             .AllowAnonymous()
+            .RequireRateLimiting("AuthPolicy")
             .WithDescription("Login using Google OAuth");
     }
 }

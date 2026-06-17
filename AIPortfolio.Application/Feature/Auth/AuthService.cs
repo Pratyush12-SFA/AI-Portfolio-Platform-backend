@@ -61,7 +61,7 @@ public sealed class AuthService : IAuthService
             {
                 UserId = user.Id,
                 Token = refreshToken,
-                ExpiresAt = DateTime.Now.AddDays(30),
+                ExpiresAt = request.RememberMe? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddHours(8),
                 CreatedBy = user.FullName,
                 CreatedFromIp = _userInfoAccessor.GetRemoteIp()
             });
