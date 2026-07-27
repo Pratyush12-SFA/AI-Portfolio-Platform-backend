@@ -1,4 +1,4 @@
-﻿using AIPortfolio.API.Common;
+using AIPortfolio.API.Common;
 using AIPortfolio.API.Extensions;
 
 namespace AIPortfolio.API.Endpoints.Auth;
@@ -17,7 +17,6 @@ internal sealed class LoginEndpointMapper : IEndpointMapper
             .WithName("Login")
             .WithDescription("Login to portfolio application")
             .AllowAnonymous()
-            .RequireRateLimiting("AuthPolicy")
             .RequireAuthorization();
         
         authGroup.MapGet("me", LoginEndpoint.GetMe)

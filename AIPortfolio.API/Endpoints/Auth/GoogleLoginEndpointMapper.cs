@@ -1,4 +1,4 @@
-﻿using AIPortfolio.API.Common;
+using AIPortfolio.API.Common;
 using AIPortfolio.API.Extensions;
 
 namespace AIPortfolio.API.Endpoints.Auth;
@@ -13,7 +13,6 @@ internal sealed class GoogleLoginEndpointMapper : IEndpointMapper
         googleAuthGroup.MapPost("google-login", GoogleLoginEndpoint.PostGoogleLogin)
             .WithDisplayName("google-login")
             .AllowAnonymous()
-            .RequireRateLimiting("AuthPolicy")
             .WithDescription("Login using Google OAuth");
     }
 }

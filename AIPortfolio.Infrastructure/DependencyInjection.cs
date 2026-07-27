@@ -1,4 +1,5 @@
-﻿using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Infrastructure.AI;
 using AIPortfolio.Infrastructure.Authentication;
 using AIPortfolio.Infrastructure.Configurations;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,9 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(
             configuration.GetSection("JwtSettings"));
 
+        services.Configure<GeminiSettings>(
+            configuration.GetSection("GeminiSettings"));
+
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
@@ -22,6 +26,11 @@ public static class DependencyInjection
         services.AddScoped<IUserInfoAccessor, UserInfoAccessor>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
         services.AddScoped<ICookieService, CookieService>();
+
+        services.AddHttpClient<IAIProvider, GeminiProvider>();
+        services.AddScoped<IAIUsageService, AIUsageService>();
+        services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<IResumeAIService, ResumeAIService>();
 
         return services;
     }

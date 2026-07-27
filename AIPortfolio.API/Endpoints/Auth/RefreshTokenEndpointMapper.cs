@@ -1,4 +1,4 @@
-﻿using AIPortfolio.API.Common;
+using AIPortfolio.API.Common;
 using AIPortfolio.API.Extensions;
 
 namespace AIPortfolio.API.Endpoints.Auth;
@@ -15,7 +15,6 @@ internal sealed class RefreshTokenEndpointMapper : IEndpointMapper
             .WithName("refresh-token")
             .WithDescription("refresh-token details")
             .AllowAnonymous()
-            .RequireRateLimiting("AuthPolicy")
             .RequireAuthorization();
     }
 }
