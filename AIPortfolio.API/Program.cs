@@ -6,7 +6,7 @@ using AIPortfolio.Infrastructure;
 using AIPortfolio.Infrastructure.Configurations;
 using AIPortfolio.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.RateLimiting;
+
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
@@ -65,32 +65,7 @@ builder.Services
                             jwtSettings.SecretKey))
             };
     });
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = 
-        StatusCodes.Status429TooManyRequests;
 
-    options.OnRejected = async (
-        context,
-        cancellationToken) =>
-    {
-        await context.HttpContext.Response.WriteAsJsonAsync(
-            new
-            {
-                success = false,
-                message = "Too Many Requests. Try Again in 5 minutes"
-            },
-            cancellationToken);
-    };
-    options.AddFixedWindowLimiter(
-        "AuthPolicy",
-        configure =>
-        {
-            configure.PermitLimit = 5;
-            configure.Window = TimeSpan.FromMinutes(5);
-            configure.QueueLimit = 0;
-        });
-});
 
 builder.Services.AddAuthorization();
 
@@ -107,7 +82,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("Frontend");
 
 app.UseGlobalExceptionHandling();
-app.UseRateLimiter();
+
 
 app.UseAuthentication();
 

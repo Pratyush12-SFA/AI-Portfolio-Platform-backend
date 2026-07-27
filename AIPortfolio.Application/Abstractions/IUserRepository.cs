@@ -1,4 +1,4 @@
-﻿using AIPortfolio.Domain.Entites;
+using AIPortfolio.Domain.Entites;
 
 namespace AIPortfolio.Application.Abstractions;
 
@@ -19,4 +19,19 @@ public interface IUserRepository
     Task LinkGoogleAccountAsync(
         long id,
         string googleId);
+
+    Task UpdateSecurityTokensAsync(
+        long userId,
+        string? resetToken,
+        DateTime? resetExpires,
+        string? verificationToken,
+        DateTime? verificationExpires);
+
+    Task VerifyEmailAsync(long userId);
+
+    Task UpdatePasswordAsync(long userId, string passwordHash);
+
+    Task<User?> GetByResetTokenAsync(string token);
+
+    Task<User?> GetByVerificationTokenAsync(string token);
 }

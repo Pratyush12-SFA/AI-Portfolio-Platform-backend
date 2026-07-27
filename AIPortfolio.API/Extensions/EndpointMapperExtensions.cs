@@ -1,5 +1,7 @@
-﻿using AIPortfolio.API.Common;
+using AIPortfolio.API.Common;
 using AIPortfolio.API.Endpoints.Auth;
+using AIPortfolio.API.Endpoints.Portfolio;
+using AIPortfolio.API.Endpoints.AI;
 
 namespace AIPortfolio.API.Extensions;
 
@@ -15,6 +17,10 @@ public static class EndpointMapperExtensions
         services.AddSingleton<IEndpointMapper, GoogleLoginEndpointMapper>();
         services.AddSingleton<IEndpointMapper, RefreshTokenEndpointMapper>();
         services.AddSingleton<IEndpointMapper, LogoutEndpointMapper>();
+        services.AddSingleton<IEndpointMapper, AuthExtendedEndpointMapper>();
+        services.AddSingleton<IEndpointMapper, PortfolioEndpointMapper>();
+        services.AddSingleton<IEndpointMapper, ChatEndpointMapper>();
+        services.AddSingleton<IEndpointMapper, ResumeEndpointMapper>();
 
         return services;
     }

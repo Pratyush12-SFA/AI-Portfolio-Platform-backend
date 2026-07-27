@@ -13,4 +13,6 @@ public interface IUserInfoAccessor
     string GetUserName();
 
     string GetRemoteIp();
+
+    string? GetUserAgent();
 }

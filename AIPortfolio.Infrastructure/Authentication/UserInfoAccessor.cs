@@ -49,4 +49,12 @@ internal sealed class UserInfoAccessor : IUserInfoAccessor
                    .ToString()
                ?? "Unknown";
     }
+    public string? GetUserAgent()
+    {
+        return _httpContextAccessor
+            .HttpContext?
+            .Request
+            .Headers["User-Agent"]
+            .ToString();
+    }
 }

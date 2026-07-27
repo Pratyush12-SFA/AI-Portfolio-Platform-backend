@@ -17,13 +17,10 @@
     <Folder Include="Feature\Messages\" />
     <Folder Include="Feature\Projects\" />
     <Folder Include="Feature\Skills\" />
-    <Folder Include="Valdiators\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
-      <HintPath>C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\10.0.8\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
-    </Reference>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <PropertyGroup>
