@@ -1,60 +1,31 @@
-﻿using AIPortfolio.Application.Abstractions;
-using AIPortfolio.Application.DTOs.Auth;
-using FluentValidation;
-using FluentValidation.Results;
+﻿using AIPortfolio.API.Extensions;
+using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Features.Auth.Commands.Login;
+using AIPortfolio.Application.Features.Auth.Queries.GetCurrentUser;
+using MediatR;
 
 namespace AIPortfolio.API.Endpoints.Auth;
 
 internal static class LoginEndpoint
 {
     public static async Task<IResult> PostLogin(
-        LoginRequest loginRequest,
-        IAuthService authSerivce,
+        LoginCommand command,
+        ISender mediator,
         ICookieService cookieService,
-        HttpContext httpContext,
-        IValidator <LoginRequest> loginValidator)
-
-    {
-        ValidationResult validationResult =
-            await loginValidator.ValidateAsync(loginRequest);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(
-                validationResult.ToDictionary());
-        }
-        LoginResponse? response =
-            await authSerivce.LoginAsync(loginRequest);
-
-        if (response is null)
-        {
-            return Results.Unauthorized();
-        }
-        cookieService.SetRefreshTokenCookie(
-            httpContext.Response,
-            response.RefreshToken,
-            loginRequest.RememberMe);
-        
-        return Results.Ok(
-            new
-            {
-                response.AccessToken,
-                response.Email,
-                response.FullName,
-            });
-    }
-    public static IResult GetMe(
         HttpContext httpContext)
     {
-        IUserInfoAccessor userInfoAccessor =
-            httpContext.RequestServices
-                .GetRequiredService<IUserInfoAccessor>();
+        var result = await mediator.Send(command);
+        if (result.IsSuccess)
+            cookieService.SetRefreshTokenCookie(
+                httpContext.Response,
+                result.Value.RefreshToken,
+                command.RememberMe);
+        return result.ToApiResult();
+    }
 
-        return TypedResults.Ok(new
-        {
-            userInfoAccessor.UserId,
-            userInfoAccessor.Email,
-            userInfoAccessor.FullName,
-            userInfoAccessor.IsAuthenticated
-        });
+    public static async Task<IResult> GetMe(ISender mediator)
+    {
+        var result = await mediator.Send(new GetCurrentUserQuery());
+        return result.ToApiResult();
     }
 }

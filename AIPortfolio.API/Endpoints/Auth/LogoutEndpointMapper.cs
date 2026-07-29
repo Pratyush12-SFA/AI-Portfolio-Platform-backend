@@ -10,13 +10,12 @@ internal sealed class LogoutEndpointMapper : IEndpointMapper
     {
         ArgumentNullException.ThrowIfNull(endpointRouteBuilder);
 
-        RouteGroupBuilder authGroup = endpointRouteBuilder.MapAuthGroup();
+        var authGroup = endpointRouteBuilder.MapAuthGroup();
 
         authGroup.MapPost("logout", LogoutEndpoint.PostLogout)
             .WithDisplayName("logout")
             .WithName("Logout")
             .WithDescription("Logout to portfolio application")
-            .AllowAnonymous()
-            .RequireAuthorization();
-    } 
+            .AllowAnonymous();
+    }
 }

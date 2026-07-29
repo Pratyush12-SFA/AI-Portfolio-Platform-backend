@@ -1,27 +1,22 @@
-﻿using AIPortfolio.Application.Abstractions;
+﻿using AIPortfolio.API.Extensions;
+using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Features.Auth.Commands.Logout;
+using MediatR;
 
 namespace AIPortfolio.API.Endpoints.Auth;
 
 internal static class LogoutEndpoint
 {
-    public static async Task<IResult>
-        PostLogout(
-            ICookieService cookieService,
-            HttpContext httpContext,
-           IRefreshTokenRepository refreshTokenRepository)
+    public static async Task<IResult> PostLogout(
+        ICookieService cookieService,
+        HttpContext httpContext,
+        ISender mediator)
     {
-        string? refreshToken = cookieService.GetRefreshTokenCookie(
-            httpContext.Request);
-        if (!string.IsNullOrWhiteSpace(refreshToken))
-        {
-            await refreshTokenRepository.RemoveAsync(refreshToken,
-                "SYSTEM");
-        }
-        
-        cookieService.DeleteRefreshTokenCookie(
-            httpContext.Response);
-       
+        var refreshToken = cookieService.GetRefreshTokenCookie(httpContext.Request);
+        var result = await mediator.Send(new LogoutCommand(refreshToken));
 
-        return Results.Ok();
+        cookieService.DeleteRefreshTokenCookie(httpContext.Response);
+
+        return result.ToApiResult();
     }
 }
