@@ -38,7 +38,14 @@ public sealed class GeminiProvider : IAIProvider
         bool requestJson = false)
     {
         string model = string.IsNullOrWhiteSpace(modelName) ? _settings.DefaultModel : modelName;
-        string url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={_settings.GeminiApiKey}";
+        
+        string apiKey = _settings.GeminiApiKey;
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "PLACEHOLDER_KEY")
+        {
+            apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? apiKey;
+        }
+
+        string url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
 
         var requestBody = new
         {

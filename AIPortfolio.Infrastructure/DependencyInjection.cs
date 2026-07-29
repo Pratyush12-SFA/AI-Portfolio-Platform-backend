@@ -1,7 +1,9 @@
+using AIPortfolio.Application.Abstraction;
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Infrastructure.AI;
 using AIPortfolio.Infrastructure.Authentication;
 using AIPortfolio.Infrastructure.Configurations;
+using AIPortfolio.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +21,7 @@ public static class DependencyInjection
         services.Configure<GeminiSettings>(
             configuration.GetSection("GeminiSettings"));
 
+        services.AddScoped<IDateHandler, DateHandler>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

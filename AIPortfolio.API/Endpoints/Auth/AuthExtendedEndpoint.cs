@@ -1,6 +1,8 @@
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Application.DTOs.Auth;
+using AIPortfolio.Persistence.Data;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AIPortfolio.API.Endpoints.Auth;
@@ -95,6 +97,8 @@ internal static class AuthExtendedEndpoint
     }
 
     public static async Task<IResult> GetActiveSessions(
+        HttpContext httpContext,
+        AIPortfolioDbContext dbContext,
         IUserSessionRepository sessionRepository,
         IUserInfoAccessor userInfoAccessor)
     {
@@ -103,7 +107,37 @@ internal static class AuthExtendedEndpoint
             return Results.Unauthorized();
         }
 
-        var sessions = await sessionRepository.GetActiveSessionsAsync(userInfoAccessor.UserId);
+        var sessions = (await sessionRepository.GetActiveSessionsAsync(userInfoAccessor.UserId)).ToList();
+
+        // Try to read refresh_token cookie
+        if (httpContext.Request.Cookies.TryGetValue("refresh_token", out var tokenValue) && !string.IsNullOrEmpty(tokenValue))
+        {
+            var tokenRecord = await dbContext.RefreshTokens
+                .FirstOrDefaultAsync(t => t.Token == tokenValue && t.UserId == userInfoAccessor.UserId);
+
+            if (tokenRecord != null)
+            {
+                var currentSession = sessions.FirstOrDefault(s => s.RefreshTokenId == tokenRecord.Id);
+                if (currentSession != null)
+                {
+                    currentSession.IsCurrentActive = true;
+                }
+            }
+        }
+
+        // Fallback: if still none marked, mark the one matching IP and User Agent
+        if (!sessions.Any(s => s.IsCurrentActive))
+        {
+            var ip = userInfoAccessor.GetRemoteIp();
+            var ua = userInfoAccessor.GetUserAgent();
+            var match = sessions.FirstOrDefault(s => s.IpAddress == ip && s.UserAgent == ua)
+                        ?? sessions.OrderByDescending(s => s.LastActiveAt).FirstOrDefault();
+            if (match != null)
+            {
+                match.IsCurrentActive = true;
+            }
+        }
+
         return Results.Ok(sessions);
     }
 

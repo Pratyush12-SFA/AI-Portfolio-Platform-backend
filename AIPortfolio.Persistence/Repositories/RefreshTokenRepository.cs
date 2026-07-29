@@ -1,95 +1,58 @@
-﻿using System.Data;
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Domain.Entites;
-using AIPortfolio.Persistence.Connections;
-using Dapper;
+using AIPortfolio.Persistence.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace AIPortfolio.Persistence.Repositories;
 
-internal sealed class RefreshTokenRepository
-    : IRefreshTokenRepository
+internal sealed class RefreshTokenRepository : IRefreshTokenRepository
 {
-    private readonly DapperContext _context;
+    private readonly AIPortfolioDbContext _dbContext;
 
-    public RefreshTokenRepository(
-        DapperContext context)
+    public RefreshTokenRepository(AIPortfolioDbContext dbContext)
     {
-        _context = context;
+        _dbContext = dbContext;
     }
 
-    public async Task<long> CreateAsync(
-        RefreshToken refreshToken)
+    public async Task<long> CreateAsync(RefreshToken refreshToken)
     {
-        using IDbConnection connection =
-            _context.CreateConnection();
-
-        return await connection
-            .QuerySingleAsync<long>(
-                "[Identity].[usp_RefreshToken_Create]",
-                new
-                {
-                    refreshToken.UserId,
-                    refreshToken.Token,
-                    refreshToken.ExpiresAt,
-                    refreshToken.CreatedBy,
-                    refreshToken.CreatedFromIp
-                },
-                commandType:
-                    CommandType.StoredProcedure);
+        _dbContext.RefreshTokens.Add(refreshToken);
+        await _dbContext.SaveChangesAsync();
+        return refreshToken.Id;
     }
 
-    public async Task<RefreshToken?>
-        GetByTokenAsync(
-            string token)
+    public async Task<RefreshToken?> GetByTokenAsync(string token)
     {
-        using IDbConnection connection =
-            _context.CreateConnection();
-
-        return await connection
-            .QueryFirstOrDefaultAsync<
-                RefreshToken>(
-                "[Identity].[usp_RefreshToken_GetByToken]",
-                new
-                {
-                    Token = token
-                },
-                commandType:
-                    CommandType.StoredProcedure);
+        return await _dbContext.RefreshTokens
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.Token == token && !r.IsRevoked && r.ExpiresAt > DateTime.UtcNow);
     }
 
-    public async Task RemoveAsync(
-        string token,
-        string revokedBy)
+    public async Task RemoveAsync(string token, string revokedBy)
     {
-        using IDbConnection connection =
-            _context.CreateConnection();
-
-        await connection.ExecuteAsync(
-            "[Identity].[usp_RefreshToken_Revoke]",
-            new
-            {
-                Token = token,
-                RevokedBy = revokedBy
-            },
-            commandType:
-                CommandType.StoredProcedure);
+        var rt = await _dbContext.RefreshTokens.FirstOrDefaultAsync(r => r.Token == token);
+        if (rt != null)
+        {
+            rt.IsRevoked = true;
+            rt.RevokedAt = DateTime.UtcNow;
+            rt.RevokedBy = revokedBy;
+            await _dbContext.SaveChangesAsync();
+        }
     }
 
-    public async Task RevokeAllAsync(
-        long userId,
-        string revokedBy)
+    public async Task RevokeAllAsync(long userId, string revokedBy)
     {
-        using IDbConnection connection =
-            _context.CreateConnection();
+        var tokens = await _dbContext.RefreshTokens
+            .Where(r => r.UserId == userId && !r.IsRevoked)
+            .ToListAsync();
 
-        await connection.ExecuteAsync(
-            "[Identity].[usp_RefreshToken_RevokeAll]",
-            new
-            {
-                UserId = userId,
-                RevokedBy = revokedBy
-            },
-            commandType:
-                CommandType.StoredProcedure);
+        foreach (var token in tokens)
+        {
+            token.IsRevoked = true;
+            token.RevokedAt = DateTime.UtcNow;
+            token.RevokedBy = revokedBy;
+        }
+
+        await _dbContext.SaveChangesAsync();
     }
 }

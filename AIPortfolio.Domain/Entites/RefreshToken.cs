@@ -1,14 +1,16 @@
-﻿using AIPortfolio.Domain.Common;
+using AIPortfolio.Domain.Common;
 
 namespace AIPortfolio.Domain.Entites;
 
-public sealed class RefreshToken : AuditEntity
+public sealed class RefreshToken : BaseEntity
 {
-    public long Id { get; set; }
     public long UserId { get; set; }
-    public required string Token {get; set;}
+    public string Token { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
-    public DateTime RevokedAt { get; set; }
+    public DateTime? RevokedAt { get; set; }
     public string? RevokedBy { get; set; }
-    public  bool IsRevoked { get; set; }
+    public bool IsRevoked { get; set; }
+
+    // Navigation
+    public User User { get; set; } = null!;
 }
