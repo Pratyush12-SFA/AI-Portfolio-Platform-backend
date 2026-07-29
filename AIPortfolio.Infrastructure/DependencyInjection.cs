@@ -1,4 +1,3 @@
-using AIPortfolio.Application.Abstraction;
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Infrastructure.AI;
 using AIPortfolio.Infrastructure.Authentication;
@@ -25,12 +24,14 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-        
+
         services.AddScoped<IUserInfoAccessor, UserInfoAccessor>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
         services.AddScoped<ICookieService, CookieService>();
 
-        services.AddHttpClient<IAIProvider, GeminiProvider>();
+        services.AddHttpClient<GeminiProvider>();
+        services.AddSingleton<DevelopmentAIProvider>();
+        services.AddScoped<IAIProvider, SmartAIProvider>();
         services.AddScoped<IAIUsageService, AIUsageService>();
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<IResumeAIService, ResumeAIService>();
