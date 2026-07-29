@@ -1,39 +1,32 @@
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Domain.Entites;
-using AIPortfolio.Persistence.Connections;
-using Dapper;
+using AIPortfolio.Persistence.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
-using System.Data;
 using System.Threading.Tasks;
 
 namespace AIPortfolio.Persistence.Repositories;
 
 public sealed class PromptRepository : IPromptRepository
 {
-    private readonly DapperContext _context;
+    private readonly AIPortfolioDbContext _dbContext;
 
-    public PromptRepository(DapperContext context)
+    public PromptRepository(AIPortfolioDbContext dbContext)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public async Task<PromptTemplate?> GetActiveTemplateByFeatureAsync(string feature)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryFirstOrDefaultAsync<PromptTemplate>(
-            "Portfolio.usp_PromptTemplate_GetByFeature",
-            new { Feature = feature },
-            commandType: CommandType.StoredProcedure);
+        return await _dbContext.PromptTemplates
+            .FirstOrDefaultAsync(p => p.Feature == feature && p.IsActive && !p.IsDeleted);
     }
 
     public async Task<long> CreateTemplateAsync(PromptTemplate template)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        string sql = @"
-            INSERT INTO Portfolio.PromptTemplates (Feature, Version, SystemPrompt, UserPromptTemplate, IsActive, CreatedOn)
-            VALUES (@Feature, @Version, @SystemPrompt, @UserPromptTemplate, @IsActive, SYSUTCDATETIME());
-            SELECT SCOPE_IDENTITY();";
-        
-        return await connection.ExecuteScalarAsync<long>(sql, template);
+        template.CreatedOn = DateTime.UtcNow;
+        _dbContext.PromptTemplates.Add(template);
+        await _dbContext.SaveChangesAsync();
+        return template.Id;
     }
 }

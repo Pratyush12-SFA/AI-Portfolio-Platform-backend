@@ -16,6 +16,11 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddOpenApi();
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
+
 builder.Services.AddApplication();
 
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -76,8 +81,9 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-
     app.MapScalarApiReference();
+
+    await AIPortfolio.Persistence.Seeding.DevelopmentSeeder.SeedAsync(app.Services);
 }
 app.UseCors("Frontend");
 

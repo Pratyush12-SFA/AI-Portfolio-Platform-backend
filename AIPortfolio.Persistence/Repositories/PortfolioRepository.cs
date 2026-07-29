@@ -1,412 +1,541 @@
-using System.Data;
 using AIPortfolio.Application.Abstractions;
-using AIPortfolio.Domain.Entites;
-using AIPortfolio.Persistence.Connections;
-using Dapper;
+using AIPortfolio.Domain.Entites.Portfolio;
+using AIPortfolio.Domain.Entites.Resume;
+using AIPortfolio.Persistence.Data;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace AIPortfolio.Persistence.Repositories;
 
 internal sealed class PortfolioRepository : IPortfolioRepository
 {
-    private readonly DapperContext _context;
+    private readonly AIPortfolioDbContext _context;
+    private readonly IUserInfoAccessor _userInfoAccessor;
 
-    public PortfolioRepository(DapperContext context)
+    public PortfolioRepository(
+        AIPortfolioDbContext context,
+        IUserInfoAccessor userInfoAccessor)
     {
         _context = context;
+        _userInfoAccessor = userInfoAccessor;
     }
+
+    private async Task<long> GetOrCreatePrimaryResumeIdAsync(long userId)
+    {
+        var resume = await _context.Resumes.FirstOrDefaultAsync(r => r.UserId == userId && r.IsPrimary);
+        if (resume == null)
+        {
+            resume = new Resume
+            {
+                UserId = userId,
+                Title = "Primary Resume",
+                IsPrimary = true,
+            };
+            _context.Resumes.Add(resume);
+            await _context.SaveChangesAsync();
+        }
+        return resume.Id;
+    }
+
 
     // PROFILE
-    public async Task<Profile?> GetProfileByUserIdAsync(long userId)
+    public async Task<Portfolio?> GetProfileByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryFirstOrDefaultAsync<Profile>(
-            "Portfolio.usp_Profile_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        return await _context.Portfolios.FirstOrDefaultAsync(p => p.UserId == userId);
     }
 
-    public async Task<Profile?> GetProfileBySlugAsync(string slug)
+    public async Task<Portfolio?> GetProfileBySlugAsync(string slug)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryFirstOrDefaultAsync<Profile>(
-            "Portfolio.usp_Profile_GetBySlug",
-            new { CustomSlug = slug },
-            commandType: CommandType.StoredProcedure);
+        return await _context.Portfolios.FirstOrDefaultAsync(p => p.CustomSlug == slug);
     }
 
-    public async Task UpsertProfileAsync(Profile profile)
+    public async Task UpsertProfileAsync(Portfolio portfolio)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_Profile_Upsert",
-            new
-            {
-                profile.UserId,
-                profile.Headline,
-                profile.Summary,
-                profile.PhoneNumber,
-                profile.ContactEmail,
-                profile.Address,
-                profile.ThemeName,
-                profile.CustomSlug,
-                profile.IsDarkModePreferred,
-                profile.CreatedBy,
-                profile.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+        var existing = await _context.Portfolios.FirstOrDefaultAsync(p => p.UserId == portfolio.UserId);
+        if (existing == null)
+        {
+            _context.Portfolios.Add(portfolio);
+        }
+        else
+        {
+            existing.ProfileHeadline = portfolio.ProfileHeadline;
+            existing.ProfileSummary = portfolio.ProfileSummary;
+            existing.ContactEmail = portfolio.ContactEmail;
+            existing.ContactPhone = portfolio.ContactPhone;
+            existing.Address = portfolio.Address;
+            existing.BannerPictureUrl = portfolio.BannerPictureUrl;
+            existing.ProfilePictureUrl = portfolio.ProfilePictureUrl;
+            existing.SelectedThemeId = portfolio.SelectedThemeId;
+            existing.SEOTitle = portfolio.SEOTitle;
+            existing.SEODescription = portfolio.SEODescription;
+            existing.SEOKeywords = portfolio.SEOKeywords;
+            existing.IsPublic = portfolio.IsPublic;
+
+            existing.UpdatedBy = portfolio.CreatedBy;
+            existing.UpdatedOn = DateTime.UtcNow;
+            existing.UpdatedFromIp = portfolio.CreatedFromIp;
+        }
+        await _context.SaveChangesAsync();
     }
 
     // EDUCATION
-    public async Task<IEnumerable<Education>> GetEducationsByUserIdAsync(long userId)
+    public async Task<IEnumerable<ResumeEducation>> GetEducationsByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<Education>(
-            "Portfolio.usp_Education_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var resumeId = await GetOrCreatePrimaryResumeIdAsync(userId);
+        return await _context.ResumeEducations.Where(e => e.ResumeId == resumeId).ToListAsync();
     }
 
-    public async Task<long> UpsertEducationAsync(Education education)
+    public async Task<long> UpsertEducationAsync(ResumeEducation education)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_Education_Upsert",
-            new
+        if (education.ResumeId == 0)
+        {
+            education.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
+        }
+
+        if (education.Id > 0)
+        {
+            var existing = await _context.ResumeEducations.FindAsync(education.Id);
+            if (existing != null)
             {
-                education.Id,
-                education.UserId,
-                education.Institution,
-                education.Degree,
-                education.FieldOfStudy,
-                education.StartDate,
-                education.EndDate,
-                education.Grade,
-                education.Description,
-                education.DisplayOrder,
-                education.CreatedBy,
-                education.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                existing.Institution = education.Institution;
+                existing.Degree = education.Degree;
+                existing.FieldOfStudy = education.FieldOfStudy;
+                existing.StartDate = education.StartDate;
+                existing.EndDate = education.EndDate;
+                existing.Grade = education.Grade;
+                existing.Description = education.Description;
+                existing.DisplayOrder = education.DisplayOrder;
+
+                existing.UpdatedBy = education.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = education.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.ResumeEducations.Add(education);
+        await _context.SaveChangesAsync();
+        return education.Id;
     }
 
     public async Task DeleteEducationAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_Education_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.ResumeEducations.FindAsync(id);
+        if (record != null)
+        {
+            _context.ResumeEducations.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // EXPERIENCE
-    public async Task<IEnumerable<Experience>> GetExperiencesByUserIdAsync(long userId)
+    public async Task<IEnumerable<ResumeExperience>> GetExperiencesByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<Experience>(
-            "Portfolio.usp_Experience_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var resumeId = await GetOrCreatePrimaryResumeIdAsync(userId);
+        return await _context.ResumeExperiences.Where(e => e.ResumeId == resumeId).ToListAsync();
     }
 
-    public async Task<long> UpsertExperienceAsync(Experience experience)
+    public async Task<long> UpsertExperienceAsync(ResumeExperience experience)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_Experience_Upsert",
-            new
+        if (experience.ResumeId == 0)
+        {
+            experience.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
+        }
+
+        if (experience.Id > 0)
+        {
+            var existing = await _context.ResumeExperiences.FindAsync(experience.Id);
+            if (existing != null)
             {
-                experience.Id,
-                experience.UserId,
-                experience.CompanyName,
-                experience.Designation,
-                experience.EmploymentType,
-                experience.Location,
-                experience.StartDate,
-                experience.EndDate,
-                experience.Description,
-                experience.DisplayOrder,
-                experience.CreatedBy,
-                experience.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                existing.CompanyName = experience.CompanyName;
+                existing.Designation = experience.Designation;
+                existing.EmploymentType = experience.EmploymentType;
+                existing.Location = experience.Location;
+                existing.StartDate = experience.StartDate;
+                existing.EndDate = experience.EndDate;
+                existing.Description = experience.Description;
+                existing.DisplayOrder = experience.DisplayOrder;
+
+                existing.UpdatedBy = experience.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = experience.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.ResumeExperiences.Add(experience);
+        await _context.SaveChangesAsync();
+        return experience.Id;
     }
 
     public async Task DeleteExperienceAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_Experience_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.ResumeExperiences.FindAsync(id);
+        if (record != null)
+        {
+            _context.ResumeExperiences.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // PROJECT
-    public async Task<IEnumerable<Project>> GetProjectsByUserIdAsync(long userId)
+    public async Task<IEnumerable<ResumeProject>> GetProjectsByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<Project>(
-            "Portfolio.usp_Project_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var resumeId = await GetOrCreatePrimaryResumeIdAsync(userId);
+        return await _context.ResumeProjects.Where(p => p.ResumeId == resumeId).ToListAsync();
     }
 
-    public async Task<long> UpsertProjectAsync(Project project)
+    public async Task<long> UpsertProjectAsync(ResumeProject project)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_Project_Upsert",
-            new
+        if (project.ResumeId == 0)
+        {
+            project.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
+        }
+
+        if (project.Id > 0)
+        {
+            var existing = await _context.ResumeProjects.FindAsync(project.Id);
+            if (existing != null)
             {
-                project.Id,
-                project.UserId,
-                project.Title,
-                project.ShortDescription,
-                project.Description,
-                project.TechStack,
-                project.GithubUrl,
-                project.LiveDemoUrl,
-                project.ThumbnailUrl,
-                project.DisplayOrder,
-                project.IsFeatured,
-                project.CreatedBy,
-                project.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                existing.Title = project.Title;
+                existing.Role = project.Role;
+                existing.Technologies = project.Technologies;
+                existing.Url = project.Url;
+                existing.StartDate = project.StartDate;
+                existing.EndDate = project.EndDate;
+                existing.Description = project.Description;
+                existing.DisplayOrder = project.DisplayOrder;
+
+                existing.UpdatedBy = project.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = project.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.ResumeProjects.Add(project);
+        await _context.SaveChangesAsync();
+        return project.Id;
     }
 
     public async Task DeleteProjectAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_Project_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.ResumeProjects.FindAsync(id);
+        if (record != null)
+        {
+            _context.ResumeProjects.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // SKILL
-    public async Task<IEnumerable<Skill>> GetSkillsByUserIdAsync(long userId)
+    public async Task<IEnumerable<ResumeSkill>> GetSkillsByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<Skill>(
-            "Portfolio.usp_Skill_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var resumeId = await GetOrCreatePrimaryResumeIdAsync(userId);
+        return await _context.ResumeSkills.Where(s => s.ResumeId == resumeId).ToListAsync();
     }
 
-    public async Task<long> UpsertSkillAsync(Skill skill)
+    public async Task<long> UpsertSkillAsync(ResumeSkill skill)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_Skill_Upsert",
-            new
+        if (skill.ResumeId == 0)
+        {
+            skill.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
+        }
+
+        if (skill.Id > 0)
+        {
+            var existing = await _context.ResumeSkills.FindAsync(skill.Id);
+            if (existing != null)
             {
-                skill.Id,
-                skill.UserId,
-                skill.Name,
-                skill.Category,
-                skill.ProficiencyPercentage,
-                skill.DisplayOrder,
-                skill.CreatedBy,
-                skill.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                existing.Name = skill.Name;
+                existing.ProficiencyLevel = skill.ProficiencyLevel;
+                existing.Category = skill.Category;
+                existing.DisplayOrder = skill.DisplayOrder;
+
+                existing.UpdatedBy = skill.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = skill.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.ResumeSkills.Add(skill);
+        await _context.SaveChangesAsync();
+        return skill.Id;
     }
 
     public async Task DeleteSkillAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_Skill_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.ResumeSkills.FindAsync(id);
+        if (record != null)
+        {
+            _context.ResumeSkills.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // CERTIFICATION
-    public async Task<IEnumerable<Certification>> GetCertificationsByUserIdAsync(long userId)
+    public async Task<IEnumerable<ResumeCertification>> GetCertificationsByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<Certification>(
-            "Portfolio.usp_Certification_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var resumeId = await GetOrCreatePrimaryResumeIdAsync(userId);
+        return await _context.ResumeCertifications.Where(c => c.ResumeId == resumeId).ToListAsync();
     }
 
-    public async Task<long> UpsertCertificationAsync(Certification certification)
+    public async Task<long> UpsertCertificationAsync(ResumeCertification certification)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_Certification_Upsert",
-            new
+        if (certification.ResumeId == 0)
+        {
+            certification.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
+        }
+
+        if (certification.Id > 0)
+        {
+            var existing = await _context.ResumeCertifications.FindAsync(certification.Id);
+            if (existing != null)
             {
-                certification.Id,
-                certification.UserId,
-                certification.Title,
-                certification.IssuingOrganization,
-                certification.CertificateUrl,
-                certification.IssueDate,
-                certification.ExpiryDate,
-                certification.DisplayOrder,
-                certification.CreatedBy,
-                certification.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                existing.Name = certification.Name;
+                existing.IssuingOrganization = certification.IssuingOrganization;
+                existing.IssueDate = certification.IssueDate;
+                existing.ExpirationDate = certification.ExpirationDate;
+                existing.CredentialId = certification.CredentialId;
+                existing.CredentialUrl = certification.CredentialUrl;
+                existing.DisplayOrder = certification.DisplayOrder;
+
+                existing.UpdatedBy = certification.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = certification.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.ResumeCertifications.Add(certification);
+        await _context.SaveChangesAsync();
+        return certification.Id;
     }
 
     public async Task DeleteCertificationAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_Certification_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.ResumeCertifications.FindAsync(id);
+        if (record != null)
+        {
+            _context.ResumeCertifications.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // ACHIEVEMENT
-    public async Task<IEnumerable<Achievement>> GetAchievementsByUserIdAsync(long userId)
+    public async Task<IEnumerable<ResumeAchievement>> GetAchievementsByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<Achievement>(
-            "Portfolio.usp_Achievement_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var resumeId = await GetOrCreatePrimaryResumeIdAsync(userId);
+        return await _context.ResumeAchievements.Where(a => a.ResumeId == resumeId).ToListAsync();
     }
 
-    public async Task<long> UpsertAchievementAsync(Achievement achievement)
+    public async Task<long> UpsertAchievementAsync(ResumeAchievement achievement)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_Achievement_Upsert",
-            new
+        if (achievement.ResumeId == 0)
+        {
+            achievement.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
+        }
+
+        if (achievement.Id > 0)
+        {
+            var existing = await _context.ResumeAchievements.FindAsync(achievement.Id);
+            if (existing != null)
             {
-                achievement.Id,
-                achievement.UserId,
-                achievement.Title,
-                achievement.Issuer,
-                achievement.DateReceived,
-                achievement.Description,
-                achievement.DisplayOrder,
-                achievement.CreatedBy,
-                achievement.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                existing.Title = achievement.Title;
+                existing.Description = achievement.Description;
+                existing.DisplayOrder = achievement.DisplayOrder;
+
+                existing.UpdatedBy = achievement.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = achievement.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.ResumeAchievements.Add(achievement);
+        await _context.SaveChangesAsync();
+        return achievement.Id;
     }
 
     public async Task DeleteAchievementAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_Achievement_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.ResumeAchievements.FindAsync(id);
+        if (record != null)
+        {
+            _context.ResumeAchievements.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // LANGUAGE
-    public async Task<IEnumerable<Language>> GetLanguagesByUserIdAsync(long userId)
+    public async Task<IEnumerable<ResumeLanguage>> GetLanguagesByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<Language>(
-            "Portfolio.usp_Language_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var resumeId = await GetOrCreatePrimaryResumeIdAsync(userId);
+        return await _context.ResumeLanguages.Where(l => l.ResumeId == resumeId).ToListAsync();
     }
 
-    public async Task<long> UpsertLanguageAsync(Language language)
+    public async Task<long> UpsertLanguageAsync(ResumeLanguage language)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_Language_Upsert",
-            new
+        if (language.ResumeId == 0)
+        {
+            language.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
+        }
+
+        if (language.Id > 0)
+        {
+            var existing = await _context.ResumeLanguages.FindAsync(language.Id);
+            if (existing != null)
             {
-                language.Id,
-                language.UserId,
-                language.LanguageName,
-                language.Proficiency,
-                language.DisplayOrder,
-                language.CreatedBy,
-                language.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                existing.Name = language.Name;
+                existing.ProficiencyLevel = language.ProficiencyLevel;
+                existing.DisplayOrder = language.DisplayOrder;
+
+                existing.UpdatedBy = language.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = language.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.ResumeLanguages.Add(language);
+        await _context.SaveChangesAsync();
+        return language.Id;
     }
 
     public async Task DeleteLanguageAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_Language_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.ResumeLanguages.FindAsync(id);
+        if (record != null)
+        {
+            _context.ResumeLanguages.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // SOCIAL LINK
-    public async Task<IEnumerable<SocialLink>> GetSocialLinksByUserIdAsync(long userId)
+    public async Task<IEnumerable<PortfolioSocialLink>> GetSocialLinksByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<SocialLink>(
-            "Portfolio.usp_SocialLink_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var portfolio = await _context.Portfolios.FirstOrDefaultAsync(p => p.UserId == userId);
+        if (portfolio == null) return Enumerable.Empty<PortfolioSocialLink>();
+        return await _context.PortfolioSocialLinks.Where(sl => sl.PortfolioId == portfolio.Id).ToListAsync();
     }
 
-    public async Task<long> UpsertSocialLinkAsync(SocialLink socialLink)
+    public async Task<long> UpsertSocialLinkAsync(PortfolioSocialLink socialLink)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_SocialLink_Upsert",
-            new
+        if (socialLink.PortfolioId == 0)
+        {
+            var portfolio = await _context.Portfolios.FirstOrDefaultAsync(p => p.UserId == _userInfoAccessor.UserId);
+            if (portfolio == null)
             {
-                socialLink.Id,
-                socialLink.UserId,
-                socialLink.PlatformName,
-                socialLink.Url,
-                socialLink.CreatedBy,
-                socialLink.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                portfolio = new Portfolio
+                {
+                    UserId = _userInfoAccessor.UserId,
+                    CustomSlug = "user-" + _userInfoAccessor.UserId,
+                    CreatedBy = socialLink.CreatedBy,
+                    CreatedFromIp = socialLink.CreatedFromIp,
+                    RowVersion = new byte[8]
+                };
+                _context.Portfolios.Add(portfolio);
+                await _context.SaveChangesAsync();
+            }
+            socialLink.PortfolioId = portfolio.Id;
+        }
+
+        if (socialLink.Id > 0)
+        {
+            var existing = await _context.PortfolioSocialLinks.FindAsync(socialLink.Id);
+            if (existing != null)
+            {
+                existing.PlatformName = socialLink.PlatformName;
+                existing.Url = socialLink.Url;
+                existing.DisplayOrder = socialLink.DisplayOrder;
+
+                existing.UpdatedBy = socialLink.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = socialLink.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.PortfolioSocialLinks.Add(socialLink);
+        await _context.SaveChangesAsync();
+        return socialLink.Id;
     }
 
     public async Task DeleteSocialLinkAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_SocialLink_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.PortfolioSocialLinks.FindAsync(id);
+        if (record != null)
+        {
+            _context.PortfolioSocialLinks.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 
     // CUSTOM SECTION
-    public async Task<IEnumerable<CustomSection>> GetCustomSectionsByUserIdAsync(long userId)
+    public async Task<IEnumerable<ResumeCustomSection>> GetCustomSectionsByUserIdAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<CustomSection>(
-            "Portfolio.usp_CustomSection_GetByUserId",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var resumeId = await GetOrCreatePrimaryResumeIdAsync(userId);
+        return await _context.ResumeCustomSections.Where(cs => cs.ResumeId == resumeId).ToListAsync();
     }
 
-    public async Task<long> UpsertCustomSectionAsync(CustomSection customSection)
+    public async Task<long> UpsertCustomSectionAsync(ResumeCustomSection customSection)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QuerySingleAsync<long>(
-            "Portfolio.usp_CustomSection_Upsert",
-            new
+        if (customSection.ResumeId == 0)
+        {
+            customSection.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
+        }
+
+        if (customSection.Id > 0)
+        {
+            var existing = await _context.ResumeCustomSections.FindAsync(customSection.Id);
+            if (existing != null)
             {
-                customSection.Id,
-                customSection.UserId,
-                customSection.SectionTitle,
-                customSection.Content,
-                customSection.DisplayOrder,
-                customSection.CreatedBy,
-                customSection.CreatedFromIp
-            },
-            commandType: CommandType.StoredProcedure);
+                existing.SectionName = customSection.SectionName;
+                existing.Content = customSection.Content;
+                existing.DisplayOrder = customSection.DisplayOrder;
+
+                existing.UpdatedBy = customSection.CreatedBy;
+                existing.UpdatedOn = DateTime.UtcNow;
+                existing.UpdatedFromIp = customSection.CreatedFromIp;
+
+                await _context.SaveChangesAsync();
+                return existing.Id;
+            }
+        }
+
+        _context.ResumeCustomSections.Add(customSection);
+        await _context.SaveChangesAsync();
+        return customSection.Id;
     }
 
     public async Task DeleteCustomSectionAsync(long id, long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        await connection.ExecuteAsync(
-            "Portfolio.usp_CustomSection_Delete",
-            new { Id = id, UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        var record = await _context.ResumeCustomSections.FindAsync(id);
+        if (record != null)
+        {
+            _context.ResumeCustomSections.Remove(record);
+            await _context.SaveChangesAsync();
+        }
     }
 }

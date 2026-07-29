@@ -1,18 +1,24 @@
-using System;
+using AIPortfolio.Domain.Common;
 
 namespace AIPortfolio.Domain.Entites;
 
-public sealed class AIUsage
+public sealed class AIUsage : BaseEntity
 {
-    public long Id { get; set; }
     public long UserId { get; set; }
-    public required string Feature { get; set; }
-    public required string Model { get; set; }
-    public required string PromptType { get; set; }
+    public string FeatureName { get; set; } = string.Empty;
+    public string Feature { get => FeatureName; set => FeatureName = value; }
+    public string? Model { get; set; }
+    public string? PromptType { get; set; }
+    public int TokensUsed { get; set; }
     public int InputTokens { get; set; }
     public int OutputTokens { get; set; }
     public decimal EstimatedCost { get; set; }
-    public int DurationMs { get; set; }
-    public required string Status { get; set; }
-    public DateTime CreatedOn { get; set; }
+    public long DurationMs { get; set; }
+    public string Status { get; set; } = "Success";
+    public int CreditsUsed { get; set; }
+    public int RemainingCredits { get; set; }
+    public DateTime UsedAt { get; set; }
+
+    // Navigation
+    public User User { get; set; } = null!;
 }

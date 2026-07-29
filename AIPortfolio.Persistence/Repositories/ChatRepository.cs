@@ -1,70 +1,58 @@
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Domain.Entites;
-using AIPortfolio.Persistence.Connections;
-using Dapper;
+using AIPortfolio.Persistence.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AIPortfolio.Persistence.Repositories;
 
 public sealed class ChatRepository : IChatRepository
 {
-    private readonly DapperContext _context;
+    private readonly AIPortfolioDbContext _dbContext;
 
-    public ChatRepository(DapperContext context)
+    public ChatRepository(AIPortfolioDbContext dbContext)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public async Task<IEnumerable<AIChatSession>> ListSessionsAsync(long userId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<AIChatSession>(
-            "Portfolio.usp_AIChatSession_List",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
+        return await _dbContext.AIChatSessions
+            .Where(s => s.UserId == userId && !s.IsDeleted)
+            .OrderByDescending(s => s.CreatedOn)
+            .ToListAsync();
     }
 
     public async Task<AIChatSession?> GetSessionByIdAsync(long sessionId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        string sql = "SELECT Id, UserId, Title, CreatedOn, UpdatedOn FROM Portfolio.AIChatSessions WHERE Id = @SessionId";
-        return await connection.QueryFirstOrDefaultAsync<AIChatSession>(sql, new { SessionId = sessionId });
+        return await _dbContext.AIChatSessions
+            .FirstOrDefaultAsync(s => s.Id == sessionId && !s.IsDeleted);
     }
 
     public async Task<long> CreateSessionAsync(AIChatSession session)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.ExecuteScalarAsync<long>(
-            "Portfolio.usp_AIChatSession_Create",
-            new { UserId = session.UserId, Title = session.Title },
-            commandType: CommandType.StoredProcedure);
+        session.CreatedOn = DateTime.UtcNow;
+        _dbContext.AIChatSessions.Add(session);
+        await _dbContext.SaveChangesAsync();
+        return session.Id;
     }
 
     public async Task<IEnumerable<AIChatMessage>> ListMessagesAsync(long sessionId)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.QueryAsync<AIChatMessage>(
-            "Portfolio.usp_AIChatMessage_List",
-            new { SessionId = sessionId },
-            commandType: CommandType.StoredProcedure);
+        return await _dbContext.AIChatMessages
+            .Where(m => m.SessionId == sessionId && !m.IsDeleted)
+            .OrderBy(m => m.CreatedOn)
+            .ToListAsync();
     }
 
     public async Task<long> CreateMessageAsync(AIChatMessage message)
     {
-        using IDbConnection connection = _context.CreateConnection();
-        return await connection.ExecuteScalarAsync<long>(
-            "Portfolio.usp_AIChatMessage_Create",
-            new
-            {
-                SessionId = message.SessionId,
-                Role = message.Role,
-                Content = message.Content,
-                InputTokens = message.InputTokens,
-                OutputTokens = message.OutputTokens
-            },
-            commandType: CommandType.StoredProcedure);
+        message.CreatedOn = DateTime.UtcNow;
+        _dbContext.AIChatMessages.Add(message);
+        await _dbContext.SaveChangesAsync();
+        return message.Id;
     }
 }

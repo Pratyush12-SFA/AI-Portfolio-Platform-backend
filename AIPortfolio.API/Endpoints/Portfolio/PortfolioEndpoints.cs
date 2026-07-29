@@ -1,7 +1,10 @@
 using AIPortfolio.Application.Abstractions;
-using AIPortfolio.Domain.Entites;
+using AIPortfolio.Domain.Entites.Portfolio;
+using AIPortfolio.Domain.Entites.Resume;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AIPortfolio.API.Endpoints.Portfolio;
 
@@ -18,26 +21,30 @@ internal static class PortfolioEndpoints
         if (profile is null)
         {
             // Return empty profile with default settings
-            profile = new Profile
+            profile = new Domain.Entites.Portfolio.Portfolio
             {
                 UserId = userInfoAccessor.UserId,
-                ThemeName = "ModernDark",
-                IsDarkModePreferred = true
+                CustomSlug = "user-" + userInfoAccessor.UserId,
+                IsPublic = true,
+                CreatedBy = userInfoAccessor.Email ?? "system",
+                CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1",
+                RowVersion = new byte[8]
             };
         }
         return Results.Ok(profile);
     }
 
     public static async Task<IResult> UpsertProfile(
-        Profile profileRequest,
+        Domain.Entites.Portfolio.Portfolio profileRequest,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
         profileRequest.UserId = userInfoAccessor.UserId;
-        profileRequest.CreatedBy = userInfoAccessor.Email;
-        profileRequest.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        profileRequest.CreatedBy = userInfoAccessor.Email ?? "system";
+        profileRequest.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        profileRequest.RowVersion = new byte[8];
 
         await repository.UpsertProfileAsync(profileRequest);
         return Results.Ok(new { success = true, message = "Profile updated successfully." });
@@ -54,15 +61,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertEducation(
-        Education education,
+        ResumeEducation education,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        education.UserId = userInfoAccessor.UserId;
-        education.CreatedBy = userInfoAccessor.Email;
-        education.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        education.CreatedBy = userInfoAccessor.Email ?? "system";
+        education.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        education.RowVersion = new byte[8];
 
         long id = await repository.UpsertEducationAsync(education);
         return Results.Ok(new { success = true, id });
@@ -89,15 +96,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertExperience(
-        Experience experience,
+        ResumeExperience experience,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        experience.UserId = userInfoAccessor.UserId;
-        experience.CreatedBy = userInfoAccessor.Email;
-        experience.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        experience.CreatedBy = userInfoAccessor.Email ?? "system";
+        experience.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        experience.RowVersion = new byte[8];
 
         long id = await repository.UpsertExperienceAsync(experience);
         return Results.Ok(new { success = true, id });
@@ -124,15 +131,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertProject(
-        Project project,
+        ResumeProject project,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        project.UserId = userInfoAccessor.UserId;
-        project.CreatedBy = userInfoAccessor.Email;
-        project.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        project.CreatedBy = userInfoAccessor.Email ?? "system";
+        project.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        project.RowVersion = new byte[8];
 
         long id = await repository.UpsertProjectAsync(project);
         return Results.Ok(new { success = true, id });
@@ -159,15 +166,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertSkill(
-        Skill skill,
+        ResumeSkill skill,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        skill.UserId = userInfoAccessor.UserId;
-        skill.CreatedBy = userInfoAccessor.Email;
-        skill.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        skill.CreatedBy = userInfoAccessor.Email ?? "system";
+        skill.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        skill.RowVersion = new byte[8];
 
         long id = await repository.UpsertSkillAsync(skill);
         return Results.Ok(new { success = true, id });
@@ -194,15 +201,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertCertification(
-        Certification certification,
+        ResumeCertification certification,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        certification.UserId = userInfoAccessor.UserId;
-        certification.CreatedBy = userInfoAccessor.Email;
-        certification.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        certification.CreatedBy = userInfoAccessor.Email ?? "system";
+        certification.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        certification.RowVersion = new byte[8];
 
         long id = await repository.UpsertCertificationAsync(certification);
         return Results.Ok(new { success = true, id });
@@ -229,15 +236,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertAchievement(
-        Achievement achievement,
+        ResumeAchievement achievement,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        achievement.UserId = userInfoAccessor.UserId;
-        achievement.CreatedBy = userInfoAccessor.Email;
-        achievement.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        achievement.CreatedBy = userInfoAccessor.Email ?? "system";
+        achievement.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        achievement.RowVersion = new byte[8];
 
         long id = await repository.UpsertAchievementAsync(achievement);
         return Results.Ok(new { success = true, id });
@@ -264,15 +271,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertLanguage(
-        Language language,
+        ResumeLanguage language,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        language.UserId = userInfoAccessor.UserId;
-        language.CreatedBy = userInfoAccessor.Email;
-        language.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        language.CreatedBy = userInfoAccessor.Email ?? "system";
+        language.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        language.RowVersion = new byte[8];
 
         long id = await repository.UpsertLanguageAsync(language);
         return Results.Ok(new { success = true, id });
@@ -299,15 +306,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertSocialLink(
-        SocialLink socialLink,
+        PortfolioSocialLink socialLink,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        socialLink.UserId = userInfoAccessor.UserId;
-        socialLink.CreatedBy = userInfoAccessor.Email;
-        socialLink.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        socialLink.CreatedBy = userInfoAccessor.Email ?? "system";
+        socialLink.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        socialLink.RowVersion = new byte[8];
 
         long id = await repository.UpsertSocialLinkAsync(socialLink);
         return Results.Ok(new { success = true, id });
@@ -334,15 +341,15 @@ internal static class PortfolioEndpoints
     }
 
     public static async Task<IResult> UpsertCustomSection(
-        CustomSection customSection,
+        ResumeCustomSection customSection,
         IPortfolioRepository repository,
         IUserInfoAccessor userInfoAccessor)
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
 
-        customSection.UserId = userInfoAccessor.UserId;
-        customSection.CreatedBy = userInfoAccessor.Email;
-        customSection.CreatedFromIp = userInfoAccessor.GetRemoteIp();
+        customSection.CreatedBy = userInfoAccessor.Email ?? "system";
+        customSection.CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        customSection.RowVersion = new byte[8];
 
         long id = await repository.UpsertCustomSectionAsync(customSection);
         return Results.Ok(new { success = true, id });

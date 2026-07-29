@@ -1,14 +1,12 @@
-using System;
+using AIPortfolio.Domain.Common;
 
 namespace AIPortfolio.Domain.Entites;
 
-public sealed class PromptTemplate
+public sealed class PromptTemplate : BaseEntity
 {
-    public long Id { get; set; }
-    public required string Feature { get; set; }
-    public int Version { get; set; }
-    public required string SystemPrompt { get; set; }
-    public required string UserPromptTemplate { get; set; }
-    public bool IsActive { get; set; }
-    public DateTime CreatedOn { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Feature { get; set; } = string.Empty;
+    public string SystemPrompt { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+    public int Version { get; set; } = 1;
 }

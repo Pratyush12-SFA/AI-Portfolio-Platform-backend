@@ -3,7 +3,9 @@ using FluentValidation;
 
 namespace AIPortfolio.Application.Validators.Auth;
 
-public sealed class LoginRequestValidator : AbstractValidator<LoginRequest>
+public sealed class 
+    
+    LoginRequestValidator : AbstractValidator<LoginRequest>
 {
     public LoginRequestValidator()
     {
