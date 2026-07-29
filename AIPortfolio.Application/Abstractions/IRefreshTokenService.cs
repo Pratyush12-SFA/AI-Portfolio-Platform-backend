@@ -1,6 +1,5 @@
 ﻿using AIPortfolio.Application.DTOs.Auth;
 
-
 namespace AIPortfolio.Application.Abstractions;
 
 public interface IRefreshTokenService

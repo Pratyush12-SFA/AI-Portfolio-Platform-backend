@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AIPortfolio.Domain.Common;
 
 namespace AIPortfolio.Domain.Entites.Resume;
@@ -12,10 +13,25 @@ public sealed class ResumeCertification : BaseEntity
     public string? CredentialId { get; set; }
     public string? CredentialUrl { get; set; }
     public int OrderIndex { get; set; }
-    public int DisplayOrder { get => OrderIndex; set => OrderIndex = value; }
-    public DateTime? ExpirationDate { get => ExpiryDate; set => ExpiryDate = value; }
-    public string? Issuer { get => IssuingOrganization; set => IssuingOrganization = value; }
+
+    public int DisplayOrder
+    {
+        get => OrderIndex;
+        set => OrderIndex = value;
+    }
+
+    public DateTime? ExpirationDate
+    {
+        get => ExpiryDate;
+        set => ExpiryDate = value;
+    }
+
+    public string? Issuer
+    {
+        get => IssuingOrganization;
+        set => IssuingOrganization = value;
+    }
 
     // Navigation
-    public Resume Resume { get; set; } = null!;
+    [JsonIgnore] public Resume? Resume { get; set; }
 }

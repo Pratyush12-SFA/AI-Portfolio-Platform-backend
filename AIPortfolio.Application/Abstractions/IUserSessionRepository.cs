@@ -14,7 +14,7 @@ public interface IUserSessionRepository
     Task<IEnumerable<UserSession>>
         GetActiveSessionsAsync(
             long userId);
-    
+
     Task<IEnumerable<UserSession>>
         GetUserSessionsAsync(
             long userId);

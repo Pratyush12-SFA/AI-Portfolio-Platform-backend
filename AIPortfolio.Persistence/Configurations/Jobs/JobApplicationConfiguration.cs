@@ -1,3 +1,4 @@
+using AIPortfolio.Domain.Entites;
 using AIPortfolio.Domain.Entites.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -29,7 +30,7 @@ internal sealed class JobApplicationConfiguration : IEntityTypeConfiguration<Job
         builder.Property(j => j.DeletedFromIp).HasMaxLength(50);
         builder.Property(j => j.RowVersion).IsRowVersion();
 
-        builder.HasOne<Domain.Entites.User>()
+        builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(j => j.UserId)
             .HasConstraintName("FK_JobApplications_Users")

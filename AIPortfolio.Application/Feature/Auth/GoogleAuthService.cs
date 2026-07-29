@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Application.DTOs.Auth;
 using AIPortfolio.Domain.Entites;
@@ -7,11 +9,11 @@ namespace AIPortfolio.Application.Feature.Auth;
 
 public sealed class GoogleAuthService : IGoogleAuthService
 {
-    private readonly IUserRepository _userRepository;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
-    private readonly IUserInfoAccessor _userInfoAccessor;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUserInfoAccessor _userInfoAccessor;
+    private readonly IUserRepository _userRepository;
     private readonly IUserSessionRepository _userSessionRepository;
 
     public GoogleAuthService(
@@ -21,18 +23,20 @@ public sealed class GoogleAuthService : IGoogleAuthService
         IRefreshTokenGenerator refreshTokenGenerator,
         IRefreshTokenRepository refreshTokenRepository,
         IUserSessionRepository userSessionRepository
-        )
+    )
     {
-        _userRepository =  userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _jwtTokenGenerator = jwtTokenGenerator ?? throw new ArgumentNullException(nameof(jwtTokenGenerator));
-        _userInfoAccessor = userInfoAccessor  ?? throw new ArgumentNullException(nameof(userInfoAccessor));
+        _userInfoAccessor = userInfoAccessor ?? throw new ArgumentNullException(nameof(userInfoAccessor));
         _refreshTokenRepository = refreshTokenRepository
                                   ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
-        _refreshTokenGenerator = refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
-        _userSessionRepository = userSessionRepository ?? throw new ArgumentNullException(nameof(userSessionRepository));
+        _refreshTokenGenerator =
+            refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
+        _userSessionRepository =
+            userSessionRepository ?? throw new ArgumentNullException(nameof(userSessionRepository));
     }
-    
-    public async Task<LoginResponse?>LoginAsync(
+
+    public async Task<LoginResponse?> LoginAsync(
         GoogleLoginRequest request)
     {
         GoogleJsonWebSignature.Payload payload;
@@ -42,24 +46,21 @@ public sealed class GoogleAuthService : IGoogleAuthService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[WARNING] Google token validation failed: {ex.Message}. Falling back to insecure decode.");
+            Console.WriteLine(
+                $"[WARNING] Google token validation failed: {ex.Message}. Falling back to insecure decode.");
             try
             {
                 var parts = request.IdToken.Split('.');
                 if (parts.Length == 3)
                 {
-                    string base64 = parts[1].Replace('-', '+').Replace('_', '/');
-                    int mod4 = base64.Length % 4;
-                    if (mod4 > 0)
-                    {
-                        base64 += new string('=', 4 - mod4);
-                    }
-                    string decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64));
-                    payload = System.Text.Json.JsonSerializer.Deserialize<GoogleJsonWebSignature.Payload>(decoded, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+                    var base64 = parts[1].Replace('-', '+').Replace('_', '/');
+                    var mod4 = base64.Length % 4;
+                    if (mod4 > 0) base64 += new string('=', 4 - mod4);
+                    var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+                    payload = JsonSerializer.Deserialize<GoogleJsonWebSignature.Payload>(decoded,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
                     if (payload == null || string.IsNullOrEmpty(payload.Email))
-                    {
                         throw new InvalidOperationException("Failed to decode valid payload");
-                    }
                 }
                 else
                 {
@@ -72,14 +73,14 @@ public sealed class GoogleAuthService : IGoogleAuthService
             }
         }
 
-        User? user =
+        var user =
             await _userRepository.GetByGoogleIdAsync(
                 payload.Subject);
-        
+
 
         if (user is null)
         {
-            User? existingUser =
+            var existingUser =
                 await _userRepository.GetByEmailAsync(
                     payload.Email);
 
@@ -103,7 +104,7 @@ public sealed class GoogleAuthService : IGoogleAuthService
                     IsActive = true
                 };
 
-                long userId =
+                var userId =
                     await _userRepository.CreateGoogleUserAsync(
                         user,
                         payload.Email,
@@ -113,14 +114,14 @@ public sealed class GoogleAuthService : IGoogleAuthService
             }
         }
 
-        string token =
+        var token =
             _jwtTokenGenerator.GenerateToken(
                 user.Id,
                 user.Email,
                 user.FullName);
-        string refreshToken =
+        var refreshToken =
             _refreshTokenGenerator.Generate();
-        long refreshTokenId =
+        var refreshTokenId =
             await _refreshTokenRepository
                 .CreateAsync(
                     new RefreshToken
@@ -145,7 +146,7 @@ public sealed class GoogleAuthService : IGoogleAuthService
                     RefreshTokenId =
                         refreshTokenId,
 
-                    CreatedFromIp = 
+                    CreatedFromIp =
                         _userInfoAccessor.GetRemoteIp(),
 
                     UserAgent =
@@ -163,5 +164,4 @@ public sealed class GoogleAuthService : IGoogleAuthService
             FullName = user.FullName
         };
     }
-    
 }

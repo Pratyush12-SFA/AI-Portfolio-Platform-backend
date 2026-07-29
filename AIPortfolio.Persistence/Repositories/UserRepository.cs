@@ -54,6 +54,7 @@ internal sealed class UserRepository : IUserRepository
         await _dbContext.SaveChangesAsync();
         return user.Id;
     }
+
     public async Task LinkGoogleAccountAsync(long userId, string googleId)
     {
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);

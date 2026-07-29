@@ -1,4 +1,3 @@
-using AIPortfolio.Domain.Entites.Notification;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

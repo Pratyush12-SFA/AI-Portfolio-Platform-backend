@@ -6,11 +6,11 @@ namespace AIPortfolio.Application.Feature.Auth;
 public sealed class UserSessionService
     : IUserSessionService
 {
-    private readonly IUserSessionRepository
-        _userSessionRepository;
-
     private readonly IUserInfoAccessor
         _userInfoAccessor;
+
+    private readonly IUserSessionRepository
+        _userSessionRepository;
 
     public UserSessionService(
         IUserSessionRepository userSessionRepository,
@@ -26,7 +26,7 @@ public sealed class UserSessionService
     public async Task<IEnumerable<UserSessionResponse>>
         GetSessionsAsync()
     {
-        long userId =
+        var userId =
             _userInfoAccessor.UserId;
 
         var sessions =
@@ -34,22 +34,21 @@ public sealed class UserSessionService
                 .GetUserSessionsAsync(
                     userId);
 
-        return sessions.Select(
-            x => new UserSessionResponse
-            {
-                Id = x.Id,
+        return sessions.Select(x => new UserSessionResponse
+        {
+            Id = x.Id,
 
-                DeviceName =
-                    x.UserAgent,
+            DeviceName =
+                x.UserAgent,
 
-                CreatedFromIp =
-                    x.CreatedFromIp,
+            CreatedFromIp =
+                x.CreatedFromIp,
 
-                LoginAt =
-                    x.CreatedOn,
-                
-                IsCurrentSession =
-                    false
-            });
+            LoginAt =
+                x.CreatedOn,
+
+            IsCurrentSession =
+                false
+        });
     }
 }

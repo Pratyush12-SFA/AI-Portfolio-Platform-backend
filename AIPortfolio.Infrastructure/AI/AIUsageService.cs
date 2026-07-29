@@ -1,7 +1,5 @@
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Domain.Entites;
-using System;
-using System.Threading.Tasks;
 
 namespace AIPortfolio.Infrastructure.AI;
 
@@ -15,16 +13,16 @@ public sealed class AIUsageService : IAIUsageService
     }
 
     public async Task LogUsageAsync(
-        long userId, 
-        string feature, 
-        string model, 
-        string promptType, 
-        int inputTokens, 
-        int outputTokens, 
-        int durationMs, 
+        long userId,
+        string feature,
+        string model,
+        string promptType,
+        int inputTokens,
+        int outputTokens,
+        int durationMs,
         string status)
     {
-        decimal estimatedCost = TokenCounter.CalculateCost(model, inputTokens, outputTokens);
+        var estimatedCost = TokenCounter.CalculateCost(model, inputTokens, outputTokens);
 
         var usage = new AIUsage
         {

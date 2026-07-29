@@ -3,10 +3,6 @@ using AIPortfolio.Domain.Entites.Portfolio;
 using AIPortfolio.Domain.Entites.Resume;
 using AIPortfolio.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AIPortfolio.Persistence.Repositories;
 
@@ -23,33 +19,30 @@ internal sealed class PortfolioRepository : IPortfolioRepository
         _userInfoAccessor = userInfoAccessor;
     }
 
-    private async Task<long> GetOrCreatePrimaryResumeIdAsync(long userId)
-    {
-        var resume = await _context.Resumes.FirstOrDefaultAsync(r => r.UserId == userId && r.IsPrimary);
-        if (resume == null)
-        {
-            resume = new Resume
-            {
-                UserId = userId,
-                Title = "Primary Resume",
-                IsPrimary = true,
-            };
-            _context.Resumes.Add(resume);
-            await _context.SaveChangesAsync();
-        }
-        return resume.Id;
-    }
-
 
     // PROFILE
     public async Task<Portfolio?> GetProfileByUserIdAsync(long userId)
     {
-        return await _context.Portfolios.FirstOrDefaultAsync(p => p.UserId == userId);
+        var portfolio = await _context.Portfolios.FirstOrDefaultAsync(p => p.UserId == userId);
+        if (portfolio != null)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null) portfolio.FullName = user.FullName;
+        }
+
+        return portfolio;
     }
 
     public async Task<Portfolio?> GetProfileBySlugAsync(string slug)
     {
-        return await _context.Portfolios.FirstOrDefaultAsync(p => p.CustomSlug == slug);
+        var portfolio = await _context.Portfolios.FirstOrDefaultAsync(p => p.CustomSlug == slug);
+        if (portfolio != null)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == portfolio.UserId);
+            if (user != null) portfolio.FullName = user.FullName;
+        }
+
+        return portfolio;
     }
 
     public async Task UpsertProfileAsync(Portfolio portfolio)
@@ -57,6 +50,8 @@ internal sealed class PortfolioRepository : IPortfolioRepository
         var existing = await _context.Portfolios.FirstOrDefaultAsync(p => p.UserId == portfolio.UserId);
         if (existing == null)
         {
+            if (string.IsNullOrWhiteSpace(portfolio.CustomSlug)) portfolio.CustomSlug = "user-" + portfolio.UserId;
+            if (string.IsNullOrWhiteSpace(portfolio.ThemeName)) portfolio.ThemeName = "ModernDark";
             _context.Portfolios.Add(portfolio);
         }
         else
@@ -74,10 +69,14 @@ internal sealed class PortfolioRepository : IPortfolioRepository
             existing.SEOKeywords = portfolio.SEOKeywords;
             existing.IsPublic = portfolio.IsPublic;
 
+            if (!string.IsNullOrWhiteSpace(portfolio.CustomSlug)) existing.CustomSlug = portfolio.CustomSlug;
+            if (!string.IsNullOrWhiteSpace(portfolio.ThemeName)) existing.ThemeName = portfolio.ThemeName;
+
             existing.UpdatedBy = portfolio.CreatedBy;
             existing.UpdatedOn = DateTime.UtcNow;
             existing.UpdatedFromIp = portfolio.CreatedFromIp;
         }
+
         await _context.SaveChangesAsync();
     }
 
@@ -91,9 +90,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
     public async Task<long> UpsertEducationAsync(ResumeEducation education)
     {
         if (education.ResumeId == 0)
-        {
             education.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
-        }
 
         if (education.Id > 0)
         {
@@ -143,9 +140,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
     public async Task<long> UpsertExperienceAsync(ResumeExperience experience)
     {
         if (experience.ResumeId == 0)
-        {
             experience.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
-        }
 
         if (experience.Id > 0)
         {
@@ -194,10 +189,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
 
     public async Task<long> UpsertProjectAsync(ResumeProject project)
     {
-        if (project.ResumeId == 0)
-        {
-            project.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
-        }
+        if (project.ResumeId == 0) project.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
 
         if (project.Id > 0)
         {
@@ -246,10 +238,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
 
     public async Task<long> UpsertSkillAsync(ResumeSkill skill)
     {
-        if (skill.ResumeId == 0)
-        {
-            skill.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
-        }
+        if (skill.ResumeId == 0) skill.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
 
         if (skill.Id > 0)
         {
@@ -295,9 +284,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
     public async Task<long> UpsertCertificationAsync(ResumeCertification certification)
     {
         if (certification.ResumeId == 0)
-        {
             certification.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
-        }
 
         if (certification.Id > 0)
         {
@@ -346,9 +333,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
     public async Task<long> UpsertAchievementAsync(ResumeAchievement achievement)
     {
         if (achievement.ResumeId == 0)
-        {
             achievement.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
-        }
 
         if (achievement.Id > 0)
         {
@@ -392,10 +377,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
 
     public async Task<long> UpsertLanguageAsync(ResumeLanguage language)
     {
-        if (language.ResumeId == 0)
-        {
-            language.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
-        }
+        if (language.ResumeId == 0) language.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
 
         if (language.Id > 0)
         {
@@ -456,6 +438,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
                 _context.Portfolios.Add(portfolio);
                 await _context.SaveChangesAsync();
             }
+
             socialLink.PortfolioId = portfolio.Id;
         }
 
@@ -502,9 +485,7 @@ internal sealed class PortfolioRepository : IPortfolioRepository
     public async Task<long> UpsertCustomSectionAsync(ResumeCustomSection customSection)
     {
         if (customSection.ResumeId == 0)
-        {
             customSection.ResumeId = await GetOrCreatePrimaryResumeIdAsync(_userInfoAccessor.UserId);
-        }
 
         if (customSection.Id > 0)
         {
@@ -537,5 +518,23 @@ internal sealed class PortfolioRepository : IPortfolioRepository
             _context.ResumeCustomSections.Remove(record);
             await _context.SaveChangesAsync();
         }
+    }
+
+    private async Task<long> GetOrCreatePrimaryResumeIdAsync(long userId)
+    {
+        var resume = await _context.Resumes.FirstOrDefaultAsync(r => r.UserId == userId && r.IsPrimary);
+        if (resume == null)
+        {
+            resume = new Resume
+            {
+                UserId = userId,
+                Title = "Primary Resume",
+                IsPrimary = true
+            };
+            _context.Resumes.Add(resume);
+            await _context.SaveChangesAsync();
+        }
+
+        return resume.Id;
     }
 }

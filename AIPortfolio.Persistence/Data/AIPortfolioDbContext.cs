@@ -1,8 +1,8 @@
 using AIPortfolio.Domain.Entites;
-using AIPortfolio.Domain.Entites.Resume;
-using AIPortfolio.Domain.Entites.Portfolio;
 using AIPortfolio.Domain.Entites.Jobs;
 using AIPortfolio.Domain.Entites.Notification;
+using AIPortfolio.Domain.Entites.Portfolio;
+using AIPortfolio.Domain.Entites.Resume;
 using Microsoft.EntityFrameworkCore;
 
 namespace AIPortfolio.Persistence.Data;
@@ -20,7 +20,7 @@ public sealed class AIPortfolioDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     // Resume Schema
-    public DbSet<Domain.Entites.Resume.Resume> Resumes => Set<Domain.Entites.Resume.Resume>();
+    public DbSet<Resume> Resumes => Set<Resume>();
     public DbSet<ResumeEducation> ResumeEducations => Set<ResumeEducation>();
     public DbSet<ResumeExperience> ResumeExperiences => Set<ResumeExperience>();
     public DbSet<ResumeProject> ResumeProjects => Set<ResumeProject>();
@@ -33,7 +33,7 @@ public sealed class AIPortfolioDbContext : DbContext
     public DbSet<ResumeTemplate> ResumeTemplates => Set<ResumeTemplate>();
 
     // Portfolio Schema
-    public DbSet<Domain.Entites.Portfolio.Portfolio> Portfolios => Set<Domain.Entites.Portfolio.Portfolio>();
+    public DbSet<Portfolio> Portfolios => Set<Portfolio>();
     public DbSet<PortfolioSocialLink> PortfolioSocialLinks => Set<PortfolioSocialLink>();
     public DbSet<RecruiterMessage> RecruiterMessages => Set<RecruiterMessage>();
 
@@ -48,12 +48,12 @@ public sealed class AIPortfolioDbContext : DbContext
     public DbSet<InterviewRound> InterviewRounds => Set<InterviewRound>();
 
     // Notification Schema
-    public DbSet<Domain.Entites.Notification.Notification> Notifications => Set<Domain.Entites.Notification.Notification>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("dbo");
-        
+
         // Scan assembly and apply configurations automatically
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AIPortfolioDbContext).Assembly);
 

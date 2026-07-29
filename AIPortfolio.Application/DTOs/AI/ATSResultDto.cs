@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace AIPortfolio.Application.DTOs.AI;
 
 public sealed class ATSResultDto

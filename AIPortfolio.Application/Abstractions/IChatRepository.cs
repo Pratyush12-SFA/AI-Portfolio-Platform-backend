@@ -1,6 +1,4 @@
 using AIPortfolio.Domain.Entites;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace AIPortfolio.Application.Abstractions;
 

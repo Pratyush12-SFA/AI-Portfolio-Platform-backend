@@ -6,7 +6,6 @@ using AIPortfolio.Application.Constants;
 using AIPortfolio.Infrastructure.Configurations;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace AIPortfolio.Infrastructure.Authentication;
 
@@ -41,12 +40,12 @@ internal sealed class JwtTokenGenerator : IJwtTokenGenerator
             SecurityAlgorithms.HmacSha256);
 
         JwtSecurityToken token = new(
-            issuer: _settings.Issuer,
-            audience: _settings.Audience,
-            claims: claims,
+            _settings.Issuer,
+            _settings.Audience,
+            claims,
             expires: DateTime.UtcNow.AddHours(12),
             signingCredentials: credentials);
-        
+
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

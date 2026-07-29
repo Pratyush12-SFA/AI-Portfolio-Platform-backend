@@ -1,18 +1,14 @@
+using System.Text;
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Domain.Entites;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AIPortfolio.Infrastructure.AI;
 
 public sealed class ChatService : IChatService
 {
+    private readonly IAIProvider _aiProvider;
     private readonly IChatRepository _chatRepository;
     private readonly IPromptRepository _promptRepository;
-    private readonly IAIProvider _aiProvider;
 
     public ChatService(
         IChatRepository chatRepository,
@@ -34,7 +30,7 @@ public sealed class ChatService : IChatService
             UpdatedOn = DateTime.UtcNow
         };
 
-        long id = await _chatRepository.CreateSessionAsync(session);
+        var id = await _chatRepository.CreateSessionAsync(session);
         session.Id = id;
         return session;
     }
@@ -52,10 +48,7 @@ public sealed class ChatService : IChatService
     public async Task<AIChatMessage> SendMessageAsync(long sessionId, string userContent)
     {
         var session = await _chatRepository.GetSessionByIdAsync(sessionId);
-        if (session is null)
-        {
-            throw new KeyNotFoundException($"Coaching session ID {sessionId} not found.");
-        }
+        if (session is null) throw new KeyNotFoundException($"Coaching session ID {sessionId} not found.");
 
         // 1. Log the user's message
         var userMessage = new AIChatMessage
@@ -73,24 +66,21 @@ public sealed class ChatService : IChatService
         var history = await _chatRepository.ListMessagesAsync(sessionId);
 
         // 3. Load dynamic system prompt or fall back to standard premium prompt
-        string systemPrompt = "You are Antigravity, a premium AI career coach. You help software developers improve their resume, portfolio, projects, and prep for technical coding interviews.";
+        var systemPrompt =
+            "You are Antigravity, a premium AI career coach. You help software developers improve their resume, portfolio, projects, and prep for technical coding interviews.";
         var promptTemplate = await _promptRepository.GetActiveTemplateByFeatureAsync("CareerCoach");
-        if (promptTemplate is not null)
-        {
-            systemPrompt = promptTemplate.SystemPrompt;
-        }
+        if (promptTemplate is not null) systemPrompt = promptTemplate.SystemPrompt;
 
         // 4. Construct user/history chat stream prompt
         var conversationContext = new StringBuilder();
-        foreach (var msg in history.Take(history.Count() - 1)) // skip the user message we just added to send as current userPrompt
-        {
+        foreach (var msg in
+                 history.Take(history.Count() - 1)) // skip the user message we just added to send as current userPrompt
             conversationContext.AppendLine($"{msg.Role}: {msg.Content}");
-        }
         conversationContext.AppendLine($"User: {userContent}");
 
         // 5. Query Gemini Provider using gemini-2.5-flash for coaching chat
-        string modelName = "gemini-2.5-flash";
-        string responseText = await _aiProvider.GenerateAsync(
+        var modelName = "gemini-2.5-flash";
+        var responseText = await _aiProvider.GenerateAsync(
             systemPrompt,
             conversationContext.ToString(),
             modelName);

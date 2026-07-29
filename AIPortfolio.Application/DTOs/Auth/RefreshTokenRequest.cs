@@ -2,5 +2,5 @@
 
 public sealed class RefreshTokenRequest
 {
-    public string? RefreshToken { get; init; } 
+    public string? RefreshToken { get; init; }
 }

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AIPortfolio.Domain.Common;
 
 namespace AIPortfolio.Domain.Entites.Resume;
@@ -9,8 +10,13 @@ public sealed class ResumeSkill : BaseEntity
     public string? Category { get; set; }
     public string? ProficiencyLevel { get; set; }
     public int OrderIndex { get; set; }
-    public int DisplayOrder { get => OrderIndex; set => OrderIndex = value; }
+
+    public int DisplayOrder
+    {
+        get => OrderIndex;
+        set => OrderIndex = value;
+    }
 
     // Navigation
-    public Resume Resume { get; set; } = null!;
+    [JsonIgnore] public Resume? Resume { get; set; }
 }

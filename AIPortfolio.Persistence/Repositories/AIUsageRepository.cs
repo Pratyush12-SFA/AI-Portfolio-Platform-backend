@@ -1,8 +1,6 @@
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Domain.Entites;
 using AIPortfolio.Persistence.Data;
-using System;
-using System.Threading.Tasks;
 
 namespace AIPortfolio.Persistence.Repositories;
 

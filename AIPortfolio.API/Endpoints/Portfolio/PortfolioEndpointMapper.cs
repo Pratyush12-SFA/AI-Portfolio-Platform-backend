@@ -1,7 +1,4 @@
 using AIPortfolio.API.Common;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace AIPortfolio.API.Endpoints.Portfolio;
 

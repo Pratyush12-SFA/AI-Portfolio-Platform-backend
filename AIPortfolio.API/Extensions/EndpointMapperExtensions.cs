@@ -1,7 +1,7 @@
 using AIPortfolio.API.Common;
+using AIPortfolio.API.Endpoints.AI;
 using AIPortfolio.API.Endpoints.Auth;
 using AIPortfolio.API.Endpoints.Portfolio;
-using AIPortfolio.API.Endpoints.AI;
 
 namespace AIPortfolio.API.Extensions;
 
@@ -28,15 +28,13 @@ public static class EndpointMapperExtensions
     public static WebApplication MapEndpoints(
         this WebApplication app)
     {
-        IEnumerable<IEndpointMapper> endpointMappers =
+        var endpointMappers =
             app.Services.GetRequiredService<
                 IEnumerable<IEndpointMapper>>();
 
-        foreach (IEndpointMapper endpointMapper
+        foreach (var endpointMapper
                  in endpointMappers)
-        {
             endpointMapper.Map(app);
-        }
 
         return app;
     }
