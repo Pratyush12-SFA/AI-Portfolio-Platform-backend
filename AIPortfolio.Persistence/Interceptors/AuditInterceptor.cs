@@ -1,8 +1,6 @@
-using AIPortfolio.Application.Abstraction;
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Domain.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace AIPortfolio.Persistence.Interceptors;
@@ -40,15 +38,14 @@ internal sealed class AuditInterceptor : SaveChangesInterceptor
 
     private void UpdateAuditFields(DbContext context)
     {
-        string userName = _userInfoAccessor.IsAuthenticated
-            ? (_userInfoAccessor.GetUserName() ?? "system")
+        var userName = _userInfoAccessor.IsAuthenticated
+            ? _userInfoAccessor.GetUserName() ?? "system"
             : "system";
 
-        string remoteIp = _userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
-        DateTime now = _dateHandler.LocalNow;
+        var remoteIp = _userInfoAccessor.GetRemoteIp() ?? "127.0.0.1";
+        var now = _dateHandler.LocalNow;
 
-        foreach (EntityEntry<BaseEntity> entry in context.ChangeTracker.Entries<BaseEntity>())
-        {
+        foreach (var entry in context.ChangeTracker.Entries<BaseEntity>())
             switch (entry.State)
             {
                 case EntityState.Added:
@@ -63,6 +60,5 @@ internal sealed class AuditInterceptor : SaveChangesInterceptor
                     entry.Entity.UpdatedFromIp = remoteIp;
                     break;
             }
-        }
     }
 }

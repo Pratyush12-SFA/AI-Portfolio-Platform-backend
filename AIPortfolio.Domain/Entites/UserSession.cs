@@ -13,8 +13,11 @@ public sealed class UserSession : BaseEntity
     public bool IsActive { get; set; } = true;
 
     // Frontend Mappings
-    public string DeviceDetails => string.IsNullOrWhiteSpace(DeviceName) ? (UserAgent ?? "Unknown Device") : DeviceName;
-    public string DeviceType => (UserAgent ?? "").Contains("Mobi", StringComparison.OrdinalIgnoreCase) ? "Mobile" : "Desktop";
+    public string DeviceDetails => string.IsNullOrWhiteSpace(DeviceName) ? UserAgent ?? "Unknown Device" : DeviceName;
+
+    public string DeviceType =>
+        (UserAgent ?? "").Contains("Mobi", StringComparison.OrdinalIgnoreCase) ? "Mobile" : "Desktop";
+
     public bool IsCurrentActive { get; set; }
 
     // Navigation

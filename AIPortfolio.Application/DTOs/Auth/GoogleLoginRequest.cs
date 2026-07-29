@@ -2,5 +2,5 @@
 
 public sealed class GoogleLoginRequest
 {
-    public string? IdToken { get; init; } 
+    public string? IdToken { get; init; }
 }

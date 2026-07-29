@@ -1,4 +1,4 @@
-﻿using AIPortfolio.Application.Abstraction;
+﻿using AIPortfolio.Application.Abstractions;
 
 namespace AIPortfolio.Infrastructure.Services;
 

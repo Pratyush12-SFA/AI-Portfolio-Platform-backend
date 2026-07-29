@@ -10,7 +10,7 @@ internal sealed class RegisterEndpointMapper : IEndpointMapper
     {
         ArgumentNullException.ThrowIfNull(endpointRouteBuilder);
 
-        RouteGroupBuilder authGroup = endpointRouteBuilder.MapAuthGroup();
+        var authGroup = endpointRouteBuilder.MapAuthGroup();
         authGroup.MapPost(
                 "/register",
                 RegisterEndpoint.PostRegister)

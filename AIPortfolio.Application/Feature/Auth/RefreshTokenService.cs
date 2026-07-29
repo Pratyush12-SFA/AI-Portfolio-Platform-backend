@@ -6,11 +6,11 @@ namespace AIPortfolio.Application.Feature.Auth;
 
 public sealed class RefreshTokenService : IRefreshTokenService
 {
-    private readonly IRefreshTokenRepository _refreshTokenRepository;
-    private readonly IUserRepository _userRepository;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUserInfoAccessor _userInfo;
+    private readonly IUserRepository _userRepository;
 
     public RefreshTokenService(
         IRefreshTokenRepository refreshTokenRepository,
@@ -18,46 +18,36 @@ public sealed class RefreshTokenService : IRefreshTokenService
         IJwtTokenGenerator jwtTokenGenerator,
         IRefreshTokenGenerator refreshTokenGenerator,
         IUserInfoAccessor userInfo
-        )
+    )
     {
-        _refreshTokenRepository = refreshTokenRepository ??  throw new ArgumentNullException(nameof(refreshTokenRepository));
-        _userRepository = userRepository ??  throw new ArgumentNullException(nameof(userRepository));
+        _refreshTokenRepository =
+            refreshTokenRepository ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _jwtTokenGenerator = jwtTokenGenerator ?? throw new ArgumentNullException(nameof(jwtTokenGenerator));
-        _refreshTokenGenerator = refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
-        _userInfo = userInfo ??  throw new ArgumentNullException(nameof(userInfo));
+        _refreshTokenGenerator =
+            refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
+        _userInfo = userInfo ?? throw new ArgumentNullException(nameof(userInfo));
     }
 
     public async Task<RefreshTokenResponse?> RefreshAsync(RefreshTokenRequest refreshTokenRequest)
     {
         if (refreshTokenRequest.RefreshToken != null)
         {
-            RefreshToken? refreshToken =
+            var refreshToken =
                 await _refreshTokenRepository.GetByTokenAsync(
                     refreshTokenRequest.RefreshToken);
-            if (refreshToken is null)
-            {
-                return null;
-            }
+            if (refreshToken is null) return null;
 
-            if (refreshToken.IsRevoked)
-            {
-                return null;
-            }
+            if (refreshToken.IsRevoked) return null;
 
-            if (refreshToken.ExpiresAt <= DateTime.UtcNow)
-            {
-                return null;
-            }
-            User? user =
+            if (refreshToken.ExpiresAt <= DateTime.UtcNow) return null;
+            var user =
                 await _userRepository.GetByIdAsync(
                     refreshToken.UserId);
 
-            if (user is null)
-            {
-                return null;
-            }
+            if (user is null) return null;
 
-            string accessToken =
+            var accessToken =
                 _jwtTokenGenerator.GenerateToken(
                     user.Id,
                     user.Email,
@@ -67,7 +57,7 @@ public sealed class RefreshTokenService : IRefreshTokenService
                 refreshToken.Token,
                 user.FullName);
 
-            string newRefreshToken =
+            var newRefreshToken =
                 _refreshTokenGenerator.Generate();
 
             await _refreshTokenRepository.CreateAsync(
@@ -86,6 +76,7 @@ public sealed class RefreshTokenService : IRefreshTokenService
                 RefreshToken = newRefreshToken
             };
         }
+
         return null;
     }
 }

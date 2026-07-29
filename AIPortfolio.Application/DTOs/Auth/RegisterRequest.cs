@@ -4,5 +4,5 @@ public sealed class RegisterRequest
 {
     public required string FullName { get; init; }
     public required string Email { get; init; }
-    public string Password { get; init; } = null!;  
+    public string Password { get; init; } = null!;
 }

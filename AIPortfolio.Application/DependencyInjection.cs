@@ -1,7 +1,7 @@
-using AIPortfolio.Application.Abstractions;
-using AIPortfolio.Application.Feature.Auth;
-using Microsoft.Extensions.DependencyInjection;
+using AIPortfolio.Application.Behaviours;
 using FluentValidation;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AIPortfolio.Application;
 
@@ -10,15 +10,15 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(
         this IServiceCollection services)
     {
-        services.AddScoped<IAuthService, AuthService>();
         services.AddValidatorsFromAssembly(
             typeof(DependencyInjection).Assembly);
-        services.AddScoped<IGoogleAuthService, GoogleAuthService>();
-        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-        services.AddScoped<ILogoutService, LogoutService>();
 
-        services.AddMediatR(cfg => 
-            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(CommandValidationBehaviour<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ElapsedTimeBehaviour<,>));
+        });
 
         return services;
     }

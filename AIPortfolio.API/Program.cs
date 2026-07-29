@@ -1,12 +1,13 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using AIPortfolio.API.Extensions;
 using AIPortfolio.API.Middleware;
 using AIPortfolio.Application;
 using AIPortfolio.Infrastructure;
 using AIPortfolio.Infrastructure.Configurations;
 using AIPortfolio.Persistence;
+using AIPortfolio.Persistence.Seeding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
@@ -18,7 +19,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
-    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
 builder.Services.AddApplication();
@@ -42,7 +43,7 @@ builder.Services.AddCors(options =>
         });
 });
 
-JwtSettings jwtSettings =
+var jwtSettings =
     builder.Configuration
         .GetSection("JwtSettings")
         .Get<JwtSettings>()!;
@@ -83,8 +84,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 
-    await AIPortfolio.Persistence.Seeding.DevelopmentSeeder.SeedAsync(app.Services);
+    await DevelopmentSeeder.SeedAsync(app.Services);
 }
+
 app.UseCors("Frontend");
 
 app.UseGlobalExceptionHandling();

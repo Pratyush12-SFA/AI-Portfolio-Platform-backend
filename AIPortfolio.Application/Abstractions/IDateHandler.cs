@@ -1,4 +1,4 @@
-﻿namespace AIPortfolio.Application.Abstraction;
+﻿namespace AIPortfolio.Application.Abstractions;
 
 public interface IDateHandler
 {

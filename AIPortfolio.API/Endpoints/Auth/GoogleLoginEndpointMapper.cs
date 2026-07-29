@@ -8,7 +8,7 @@ internal sealed class GoogleLoginEndpointMapper : IEndpointMapper
     public void Map(IEndpointRouteBuilder endpointRouteBuilder)
     {
         ArgumentNullException.ThrowIfNull(endpointRouteBuilder);
-        RouteGroupBuilder googleAuthGroup = endpointRouteBuilder.MapAuthGroup();
+        var googleAuthGroup = endpointRouteBuilder.MapAuthGroup();
 
         googleAuthGroup.MapPost("google-login", GoogleLoginEndpoint.PostGoogleLogin)
             .WithDisplayName("google-login")

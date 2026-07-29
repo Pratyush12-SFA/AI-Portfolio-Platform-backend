@@ -43,5 +43,11 @@ internal sealed class PortfolioConfiguration : IEntityTypeConfiguration<Domain.E
             .HasDatabaseName("UX_Portfolios_CustomSlug");
 
         builder.HasQueryFilter(p => !p.IsDeleted);
+
+        // Ignore virtual properties mapping to DB columns
+        builder.Ignore(p => p.Headline);
+        builder.Ignore(p => p.Summary);
+        builder.Ignore(p => p.PhoneNumber);
+        builder.Ignore(p => p.FullName);
     }
 }

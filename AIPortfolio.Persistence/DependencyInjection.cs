@@ -1,8 +1,8 @@
 using AIPortfolio.Application.Abstractions;
-using AIPortfolio.Persistence.Interceptors;
 using AIPortfolio.Persistence.Connections;
-using AIPortfolio.Persistence.Repositories;
 using AIPortfolio.Persistence.Data;
+using AIPortfolio.Persistence.Interceptors;
+using AIPortfolio.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

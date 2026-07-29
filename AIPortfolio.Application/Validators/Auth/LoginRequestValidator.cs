@@ -3,8 +3,7 @@ using FluentValidation;
 
 namespace AIPortfolio.Application.Validators.Auth;
 
-public sealed class 
-    
+public sealed class
     LoginRequestValidator : AbstractValidator<LoginRequest>
 {
     public LoginRequestValidator()
@@ -17,6 +16,5 @@ public sealed class
         RuleFor(r => r.Password)
             .NotEmpty()
             .WithMessage("Password is required");
-
     }
 }

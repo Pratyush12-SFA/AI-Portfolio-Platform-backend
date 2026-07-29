@@ -2,7 +2,6 @@
 using AIPortfolio.Application.Constants;
 using Microsoft.AspNetCore.Http;
 
-
 namespace AIPortfolio.Infrastructure.Authentication;
 
 internal sealed class UserInfoAccessor : IUserInfoAccessor
@@ -36,6 +35,7 @@ internal sealed class UserInfoAccessor : IUserInfoAccessor
 
     public bool IsAuthenticated =>
         _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
+
     public string GetUserName()
     {
         return FullName;
@@ -49,6 +49,7 @@ internal sealed class UserInfoAccessor : IUserInfoAccessor
                    .ToString()
                ?? "Unknown";
     }
+
     public string? GetUserAgent()
     {
         return _httpContextAccessor

@@ -1,5 +1,3 @@
-using System;
-
 namespace AIPortfolio.Infrastructure.AI;
 
 public static class TokenCounter
@@ -13,8 +11,8 @@ public static class TokenCounter
 
     public static decimal CalculateCost(string model, int inputTokens, int outputTokens)
     {
-        decimal inputRate = 0m;
-        decimal outputRate = 0m;
+        var inputRate = 0m;
+        var outputRate = 0m;
 
         // Realistic pricing model per 1M tokens
         if (model.Contains("pro", StringComparison.OrdinalIgnoreCase))
@@ -30,6 +28,6 @@ public static class TokenCounter
             outputRate = 0.30m / 1_000_000m;
         }
 
-        return (inputTokens * inputRate) + (outputTokens * outputRate);
+        return inputTokens * inputRate + outputTokens * outputRate;
     }
 }

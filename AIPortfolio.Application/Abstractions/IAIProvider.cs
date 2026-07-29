@@ -1,18 +1,15 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace AIPortfolio.Application.Abstractions;
 
 public interface IAIProvider
 {
     Task<string> GenerateAsync(
-        string systemPrompt, 
-        string userPrompt, 
-        string modelName, 
+        string systemPrompt,
+        string userPrompt,
+        string modelName,
         bool requestJson = false);
 
     IAsyncEnumerable<string> StreamAsync(
-        string systemPrompt, 
-        string userPrompt, 
+        string systemPrompt,
+        string userPrompt,
         string modelName);
 }

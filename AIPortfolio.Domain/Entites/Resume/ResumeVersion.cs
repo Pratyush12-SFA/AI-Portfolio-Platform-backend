@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AIPortfolio.Domain.Common;
 
 namespace AIPortfolio.Domain.Entites.Resume;
@@ -10,5 +11,5 @@ public sealed class ResumeVersion : BaseEntity
     public string? Label { get; set; }
 
     // Navigation
-    public Resume Resume { get; set; } = null!;
+    [JsonIgnore] public Resume? Resume { get; set; }
 }

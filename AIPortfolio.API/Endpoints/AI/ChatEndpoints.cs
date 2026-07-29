@@ -1,8 +1,5 @@
 using AIPortfolio.Application.Abstractions;
-using AIPortfolio.Domain.Entites;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace AIPortfolio.API.Endpoints.AI;
 
@@ -48,9 +45,7 @@ internal static class ChatEndpoints
     {
         if (!userInfoAccessor.IsAuthenticated) return Results.Unauthorized();
         if (string.IsNullOrWhiteSpace(request.Message))
-        {
             return Results.BadRequest(new { message = "Message content is required" });
-        }
 
         var assistantMsg = await chatService.SendMessageAsync(sessionId, request.Message);
         return Results.Ok(assistantMsg);
@@ -58,4 +53,5 @@ internal static class ChatEndpoints
 }
 
 public record CreateSessionRequest(string Title);
+
 public record SendMessageRequest(string Message);

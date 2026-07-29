@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AIPortfolio.Domain.Common;
 
 namespace AIPortfolio.Domain.Entites.Portfolio;
@@ -25,6 +26,30 @@ public sealed class Portfolio : BaseEntity
 
     public long? SelectedThemeId { get; set; }
     public bool IsPublic { get; set; }
+
+    // Frontend compatibility properties (mapped to DB fields, ignored in EF Core)
+    [JsonPropertyName("Headline")]
+    public string? Headline
+    {
+        get => ProfileHeadline;
+        set => ProfileHeadline = value;
+    }
+
+    [JsonPropertyName("Summary")]
+    public string? Summary
+    {
+        get => ProfileSummary;
+        set => ProfileSummary = value;
+    }
+
+    [JsonPropertyName("PhoneNumber")]
+    public string? PhoneNumber
+    {
+        get => ContactPhone;
+        set => ContactPhone = value;
+    }
+
+    [JsonPropertyName("FullName")] public string? FullName { get; set; }
 
     // Navigation
     public ICollection<PortfolioSocialLink> SocialLinks { get; set; } = [];

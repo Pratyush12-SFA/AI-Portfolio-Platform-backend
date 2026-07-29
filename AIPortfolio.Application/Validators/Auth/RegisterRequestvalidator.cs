@@ -19,6 +19,5 @@ public sealed class RegisterRequestvalidator : AbstractValidator<RegisterRequest
             .WithMessage("Email can not be empty.")
             .EmailAddress()
             .WithMessage("Email can not be empty.");
-        
     }
 }
