@@ -1,16 +1,16 @@
-﻿namespace AIPortfolio.API.Middleware;
+namespace AIPortfolio.API.Middleware;
 
 public sealed class ExceptionMiddleware
 {
-    private readonly RequestDelegate _requestDelegate;
     private readonly ILogger<ExceptionMiddleware> _logger;
+    private readonly RequestDelegate _requestDelegate;
 
     public ExceptionMiddleware(
         RequestDelegate requestDelegate,
         ILogger<ExceptionMiddleware> logger)
     {
         _requestDelegate = requestDelegate ?? throw new ArgumentNullException(nameof(requestDelegate));
-        _logger = logger ??  throw new ArgumentNullException(nameof(logger));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -25,14 +25,13 @@ public sealed class ExceptionMiddleware
                 ex,
                 "An exception occurred while processing your request.");
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            
+
             context.Response.ContentType = "application/json";
 
             await context.Response.WriteAsJsonAsync(
                 new
                 {
-                    Success = false,
-                    Message = "An unexpected error has occured."
+                    Success = false, ex.Message
                 });
         }
     }

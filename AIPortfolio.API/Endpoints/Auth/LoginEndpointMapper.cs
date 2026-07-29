@@ -10,19 +10,17 @@ internal sealed class LoginEndpointMapper : IEndpointMapper
     {
         ArgumentNullException.ThrowIfNull(endpointRouteBuilder);
 
-        RouteGroupBuilder authGroup = endpointRouteBuilder.MapAuthGroup();
+        var authGroup = endpointRouteBuilder.MapAuthGroup();
 
         authGroup.MapPost("login", LoginEndpoint.PostLogin)
             .WithDisplayName("login")
             .WithName("Login")
             .WithDescription("Login to portfolio application")
-            .AllowAnonymous()
-            .RequireAuthorization();
-        
+            .AllowAnonymous();
+
         authGroup.MapGet("me", LoginEndpoint.GetMe)
-          .RequireAuthorization()
-          .WithDisplayName("Current User")
-          .WithName("CurrentUser");
+            .RequireAuthorization()
+            .WithDisplayName("Current User")
+            .WithName("CurrentUser");
     }
-    
 }

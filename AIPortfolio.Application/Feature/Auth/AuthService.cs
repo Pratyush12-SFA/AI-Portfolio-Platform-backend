@@ -6,12 +6,12 @@ namespace AIPortfolio.Application.Feature.Auth;
 
 public sealed class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
-    private readonly IUserInfoAccessor _userInfoAccessor;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUserInfoAccessor _userInfoAccessor;
+    private readonly IUserRepository _userRepository;
     private readonly IUserSessionRepository _userSessionRepository;
 
     public AuthService(
@@ -34,32 +34,23 @@ public sealed class AuthService : IAuthService
         LoginRequest request)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
-        if (user is null)
-        {
-            return null;
-        }
+        if (user is null) return null;
 
-        if (string.IsNullOrWhiteSpace(user.PasswordHash))
-        {
-            return null;
-        }
+        if (string.IsNullOrWhiteSpace(user.PasswordHash)) return null;
 
-        bool isValid = _passwordHasher.Verify(
+        var isValid = _passwordHasher.Verify(
             request.Password,
             user.PasswordHash);
-        if (!isValid)
-        {
-            return null;
-        }
+        if (!isValid) return null;
 
-        string token =
+        var token =
             _jwtTokenGenerator.GenerateToken(
                 user.Id,
                 user.Email,
                 user.FullName);
-        string refreshToken =
+        var refreshToken =
             _refreshTokenGenerator.Generate();
-        long refreshTokenId =
+        var refreshTokenId =
             await _refreshTokenRepository
                 .CreateAsync(
                     new RefreshToken
@@ -97,23 +88,20 @@ public sealed class AuthService : IAuthService
         return new LoginResponse
         {
             AccessToken = token,
-            RefreshToken =  refreshToken,
+            RefreshToken = refreshToken,
             Email = user.Email,
             FullName = user.FullName
         };
     }
 
-    public async Task<LoginResponse> RegisterAsync(RegisterRequest registerRequest)
+    public async Task<LoginResponse?> RegisterAsync(RegisterRequest registerRequest)
     {
-        bool exists = await _userRepository.ExistsByEmailAsync(
+        var exists = await _userRepository.ExistsByEmailAsync(
             registerRequest.Email);
 
-        if (exists)
-        {
-            return null!;
-        }
+        if (exists) return null;
 
-        string passwordHash = _passwordHasher.Hash(
+        var passwordHash = _passwordHasher.Hash(
             registerRequest.Password);
 
         User user = new()
@@ -124,15 +112,15 @@ public sealed class AuthService : IAuthService
             IsActive = true,
             CreatedBy = registerRequest.FullName
         };
-        long id = await _userRepository.CreateAsync(user,
+        var id = await _userRepository.CreateAsync(user,
             _userInfoAccessor.GetUserName(),
             _userInfoAccessor.GetRemoteIp());
 
-        string token = _jwtTokenGenerator.GenerateToken(
+        var token = _jwtTokenGenerator.GenerateToken(
             id,
             user.Email,
             user.FullName);
-        string refreshToken = _refreshTokenGenerator.Generate();    
+        var refreshToken = _refreshTokenGenerator.Generate();
         await _refreshTokenRepository.CreateAsync(
             new RefreshToken
             {
@@ -149,7 +137,6 @@ public sealed class AuthService : IAuthService
             Email = user.Email,
             FullName = user.FullName
         };
-
     }
 
     public async Task<bool> SendVerificationEmailAsync(string email)
@@ -157,9 +144,10 @@ public sealed class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(email);
         if (user is null) return false;
 
-        string token = Guid.NewGuid().ToString("N");
-        DateTime expires = DateTime.UtcNow.AddHours(24);
-        await _userRepository.UpdateSecurityTokensAsync(user.Id, user.ResetPasswordToken, user.ResetPasswordExpiresAt, token, expires);
+        var token = Guid.NewGuid().ToString("N");
+        var expires = DateTime.UtcNow.AddHours(24);
+        await _userRepository.UpdateSecurityTokensAsync(user.Id, user.ResetPasswordToken, user.ResetPasswordExpiresAt,
+            token, expires);
 
         // Mock sending email - output to Console/Debug
         Console.WriteLine($"[EMAIL MOCK] Verification link: http://localhost:5173/verify-email?token={token}");
@@ -180,9 +168,10 @@ public sealed class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(email);
         if (user is null) return false;
 
-        string token = Guid.NewGuid().ToString("N");
-        DateTime expires = DateTime.UtcNow.AddHours(1);
-        await _userRepository.UpdateSecurityTokensAsync(user.Id, token, expires, user.VerificationToken, user.VerificationExpiresAt);
+        var token = Guid.NewGuid().ToString("N");
+        var expires = DateTime.UtcNow.AddHours(1);
+        await _userRepository.UpdateSecurityTokensAsync(user.Id, token, expires, user.VerificationToken,
+            user.VerificationExpiresAt);
 
         // Mock sending email - output to Console/Debug
         Console.WriteLine($"[EMAIL MOCK] Password Reset link: http://localhost:5173/reset-password?token={token}");
@@ -194,7 +183,7 @@ public sealed class AuthService : IAuthService
         var user = await _userRepository.GetByResetTokenAsync(token);
         if (user is null) return false;
 
-        string hashed = _passwordHasher.Hash(newPassword);
+        var hashed = _passwordHasher.Hash(newPassword);
         await _userRepository.UpdatePasswordAsync(user.Id, hashed);
         return true;
     }
@@ -204,12 +193,9 @@ public sealed class AuthService : IAuthService
         var user = await _userRepository.GetByIdAsync(userId);
         if (user is null || string.IsNullOrEmpty(user.PasswordHash)) return false;
 
-        if (!_passwordHasher.Verify(oldPassword, user.PasswordHash))
-        {
-            return false;
-        }
+        if (!_passwordHasher.Verify(oldPassword, user.PasswordHash)) return false;
 
-        string hashed = _passwordHasher.Hash(newPassword);
+        var hashed = _passwordHasher.Hash(newPassword);
         await _userRepository.UpdatePasswordAsync(userId, hashed);
         return true;
     }

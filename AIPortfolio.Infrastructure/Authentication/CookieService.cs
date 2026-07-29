@@ -9,23 +9,19 @@ public sealed class CookieService : ICookieService
 
     public void SetRefreshTokenCookie(HttpResponse httpResponse, string refreshToken, bool rememberMe)
     {
-        CookieOptions options = new CookieOptions
+        var options = new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Strict
         };
-        if (rememberMe)
-        {
-            options.Expires = DateTimeOffset.Now.AddMinutes(30);
-        }
+        if (rememberMe) options.Expires = DateTimeOffset.Now.AddDays(30);
         httpResponse.Cookies.Append(RefreshTokenCookieName, refreshToken, options);
-        
     }
 
     public string? GetRefreshTokenCookie(HttpRequest httpRequest)
     {
-        httpRequest.Cookies.TryGetValue(RefreshTokenCookieName, out string? refreshToken);
+        httpRequest.Cookies.TryGetValue(RefreshTokenCookieName, out var refreshToken);
         return refreshToken;
     }
 

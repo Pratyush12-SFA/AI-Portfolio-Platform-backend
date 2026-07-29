@@ -1,8 +1,5 @@
 using AIPortfolio.API.Common;
 using AIPortfolio.API.Extensions;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace AIPortfolio.API.Endpoints.Auth;
 
@@ -12,7 +9,7 @@ internal sealed class AuthExtendedEndpointMapper : IEndpointMapper
     {
         ArgumentNullException.ThrowIfNull(endpointRouteBuilder);
 
-        RouteGroupBuilder authGroup = endpointRouteBuilder.MapAuthGroup();
+        var authGroup = endpointRouteBuilder.MapAuthGroup();
 
         authGroup.MapPost("forgot-password", AuthExtendedEndpoint.ForgotPassword)
             .AllowAnonymous()

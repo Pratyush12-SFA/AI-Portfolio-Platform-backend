@@ -2,6 +2,6 @@
 
 public sealed class RefreshTokenResponse
 {
-    public string? AccessToken { get; init; }
+    public string AccessToken { get; init; } = null!;
     public required string RefreshToken { get; init; }
 }
