@@ -9,7 +9,8 @@ public sealed record UpsertCertificationCommand(
     string Name,
     [property: JsonPropertyName("Issuer")] string? IssuingOrganization,
     string? IssueDate,
-    [property: JsonPropertyName("ExpirationDate")] string? ExpiryDate,
+    [property: JsonPropertyName("ExpirationDate")]
+    string? ExpiryDate,
     string? CredentialId,
     string? CredentialUrl,
     int OrderIndex

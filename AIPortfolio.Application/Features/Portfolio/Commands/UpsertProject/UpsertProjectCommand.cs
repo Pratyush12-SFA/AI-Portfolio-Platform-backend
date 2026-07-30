@@ -8,7 +8,8 @@ public sealed record UpsertProjectCommand(
     long? Id,
     string Title,
     string? Description,
-    [property: JsonPropertyName("Technologies")] string? TechStack,
+    [property: JsonPropertyName("Technologies")]
+    string? TechStack,
     [property: JsonPropertyName("Url")] string? ProjectUrl,
     string? GithubUrl,
     string? StartDate,

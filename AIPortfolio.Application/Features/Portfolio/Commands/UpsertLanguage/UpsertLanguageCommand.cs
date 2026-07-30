@@ -7,6 +7,7 @@ namespace AIPortfolio.Application.Features.Portfolio.Commands.UpsertLanguage;
 public sealed record UpsertLanguageCommand(
     long? Id,
     string Name,
-    [property: JsonPropertyName("Proficiency")] string? ProficiencyLevel,
+    [property: JsonPropertyName("Proficiency")]
+    string? ProficiencyLevel,
     int OrderIndex
 ) : IRequest<Result<long>>;

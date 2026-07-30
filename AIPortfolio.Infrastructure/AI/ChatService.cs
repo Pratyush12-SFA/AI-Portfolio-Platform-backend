@@ -8,9 +8,9 @@ public sealed class ChatService : IChatService
 {
     private readonly IAIProvider _aiProvider;
     private readonly IChatRepository _chatRepository;
+    private readonly IPortfolioRepository _portfolioRepository;
     private readonly IPromptRepository _promptRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IPortfolioRepository _portfolioRepository;
 
     public ChatService(
         IChatRepository chatRepository,
@@ -97,31 +97,37 @@ public sealed class ChatService : IChatService
         {
             userContext.AppendLine("\n### Work Experience");
             foreach (var exp in experiences)
-                userContext.AppendLine($"- {exp.JobTitle} at {exp.CompanyName} ({exp.StartDate:yyyy-MM} - {(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("yyyy-MM"))})");
+                userContext.AppendLine(
+                    $"- {exp.JobTitle} at {exp.CompanyName} ({exp.StartDate:yyyy-MM} - {(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("yyyy-MM"))})");
         }
+
         if (educations.Any())
         {
             userContext.AppendLine("\n### Education");
             foreach (var edu in educations)
                 userContext.AppendLine($"- {edu.Degree} in {edu.FieldOfStudy ?? ""} at {edu.Institution}");
         }
+
         if (skills.Any())
         {
             userContext.AppendLine("\n### Skills");
             userContext.AppendLine(string.Join(", ", skills.Select(s => s.Name)));
         }
+
         if (projects.Any())
         {
             userContext.AppendLine("\n### Projects");
             foreach (var proj in projects)
                 userContext.AppendLine($"- {proj.Title}: {proj.Description}");
         }
+
         if (certifications.Any())
         {
             userContext.AppendLine("\n### Certifications");
             foreach (var cert in certifications)
                 userContext.AppendLine($"- {cert.Name} ({cert.IssueDate?.ToString("yyyy-MM")})");
         }
+
         systemPrompt = $"{systemPrompt}\n\n{userContext}";
 
         // 5. Construct user/history chat stream prompt

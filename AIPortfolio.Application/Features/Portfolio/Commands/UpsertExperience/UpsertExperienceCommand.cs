@@ -6,8 +6,10 @@ namespace AIPortfolio.Application.Features.Portfolio.Commands.UpsertExperience;
 
 public sealed record UpsertExperienceCommand(
     long? Id,
-    [property: JsonPropertyName("Company")] string CompanyName,
-    [property: JsonPropertyName("Position")] string JobTitle,
+    [property: JsonPropertyName("Company")]
+    string CompanyName,
+    [property: JsonPropertyName("Position")]
+    string JobTitle,
     string? Location,
     string? StartDate,
     string? EndDate,

@@ -8,10 +8,13 @@ namespace AIPortfolio.Application.Features.Portfolio.Commands.UpsertProfile;
 
 public sealed record UpsertProfileCommand(
     string? CustomSlug,
-    [property: JsonPropertyName("Headline")] string? ProfileHeadline,
-    [property: JsonPropertyName("Summary")] string? ProfileSummary,
+    [property: JsonPropertyName("Headline")]
+    string? ProfileHeadline,
+    [property: JsonPropertyName("Summary")]
+    string? ProfileSummary,
     string? ContactEmail,
-    [property: JsonPropertyName("PhoneNumber")] string? ContactPhone,
+    [property: JsonPropertyName("PhoneNumber")]
+    string? ContactPhone,
     string? Address,
     string? ProfilePictureUrl,
     string? BannerPictureUrl,
