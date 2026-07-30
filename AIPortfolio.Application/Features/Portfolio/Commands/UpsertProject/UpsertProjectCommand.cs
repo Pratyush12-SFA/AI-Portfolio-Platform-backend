@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Ardalis.Result;
 using MediatR;
 
@@ -7,11 +8,11 @@ public sealed record UpsertProjectCommand(
     long? Id,
     string Title,
     string? Description,
-    string? TechStack,
-    string? ProjectUrl,
+    [property: JsonPropertyName("Technologies")] string? TechStack,
+    [property: JsonPropertyName("Url")] string? ProjectUrl,
     string? GithubUrl,
-    DateTime? StartDate,
-    DateTime? EndDate,
+    string? StartDate,
+    string? EndDate,
     string? Role,
     int OrderIndex,
     string? ThumbnailUrl

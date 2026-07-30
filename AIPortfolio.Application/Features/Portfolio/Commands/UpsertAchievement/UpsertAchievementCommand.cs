@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Ardalis.Result;
 using MediatR;
 
@@ -7,6 +8,6 @@ public sealed record UpsertAchievementCommand(
     long? Id,
     string Title,
     string? Description,
-    DateTime? AchievedDate,
+    [property: JsonPropertyName("Date")] string? AchievedDate,
     int OrderIndex
 ) : IRequest<Result<long>>;
