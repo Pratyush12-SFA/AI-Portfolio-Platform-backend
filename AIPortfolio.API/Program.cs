@@ -20,6 +20,8 @@ builder.Services.AddOpenApi();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.SerializerOptions.PropertyNamingPolicy = null;
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
 builder.Services.AddApplication();

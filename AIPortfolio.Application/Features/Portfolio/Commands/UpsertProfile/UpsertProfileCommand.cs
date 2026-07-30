@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AIPortfolio.Application.DTOs.Portfolio;
 using AIPortfolio.Domain.Entites.Portfolio;
 using Ardalis.Result;
@@ -7,9 +8,12 @@ namespace AIPortfolio.Application.Features.Portfolio.Commands.UpsertProfile;
 
 public sealed record UpsertProfileCommand(
     string? CustomSlug,
+    [property: JsonPropertyName("Headline")]
     string? ProfileHeadline,
+    [property: JsonPropertyName("Summary")]
     string? ProfileSummary,
     string? ContactEmail,
+    [property: JsonPropertyName("PhoneNumber")]
     string? ContactPhone,
     string? Address,
     string? ProfilePictureUrl,

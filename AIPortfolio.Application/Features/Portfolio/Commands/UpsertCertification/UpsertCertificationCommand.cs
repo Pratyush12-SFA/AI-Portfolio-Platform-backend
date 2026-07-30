@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Ardalis.Result;
 using MediatR;
 
@@ -6,9 +7,10 @@ namespace AIPortfolio.Application.Features.Portfolio.Commands.UpsertCertificatio
 public sealed record UpsertCertificationCommand(
     long? Id,
     string Name,
-    string? IssuingOrganization,
-    DateTime? IssueDate,
-    DateTime? ExpiryDate,
+    [property: JsonPropertyName("Issuer")] string? IssuingOrganization,
+    string? IssueDate,
+    [property: JsonPropertyName("ExpirationDate")]
+    string? ExpiryDate,
     string? CredentialId,
     string? CredentialUrl,
     int OrderIndex

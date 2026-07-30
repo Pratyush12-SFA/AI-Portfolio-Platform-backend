@@ -1,4 +1,5 @@
 using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Helpers;
 using AIPortfolio.Domain.Entites.Resume;
 using Ardalis.Result;
 using MediatR;
@@ -19,8 +20,8 @@ internal sealed class UpsertExperienceCommandHandler(
             CompanyName = command.CompanyName,
             JobTitle = command.JobTitle,
             Location = command.Location,
-            StartDate = command.StartDate,
-            EndDate = command.EndDate,
+            StartDate = DateParser.ParseDate(command.StartDate),
+            EndDate = DateParser.ParseNullableDate(command.EndDate),
             IsCurrent = command.IsCurrent,
             Description = command.Description,
             Responsibilities = command.Responsibilities,

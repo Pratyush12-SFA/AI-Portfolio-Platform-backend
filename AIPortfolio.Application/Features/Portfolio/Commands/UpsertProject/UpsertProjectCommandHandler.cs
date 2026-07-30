@@ -1,4 +1,5 @@
 using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Helpers;
 using AIPortfolio.Domain.Entites.Resume;
 using Ardalis.Result;
 using MediatR;
@@ -21,8 +22,8 @@ internal sealed class UpsertProjectCommandHandler(
             TechStack = command.TechStack,
             ProjectUrl = command.ProjectUrl,
             GithubUrl = command.GithubUrl,
-            StartDate = command.StartDate,
-            EndDate = command.EndDate,
+            StartDate = DateParser.ParseNullableDate(command.StartDate),
+            EndDate = DateParser.ParseNullableDate(command.EndDate),
             Role = command.Role,
             OrderIndex = command.OrderIndex,
             ThumbnailUrl = command.ThumbnailUrl,

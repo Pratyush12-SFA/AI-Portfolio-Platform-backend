@@ -30,12 +30,26 @@ using AIPortfolio.Application.Features.Portfolio.Queries.GetProjects;
 using AIPortfolio.Application.Features.Portfolio.Queries.GetPublicPortfolio;
 using AIPortfolio.Application.Features.Portfolio.Queries.GetSkills;
 using AIPortfolio.Application.Features.Portfolio.Queries.GetSocialLinks;
+using Ardalis.Result;
 using MediatR;
+using IResult = Microsoft.AspNetCore.Http.IResult;
 
 namespace AIPortfolio.API.Endpoints.Portfolio;
 
 internal static class PortfolioEndpoints
 {
+    private static IResult MutationResult<T>(Result<T> result)
+    {
+        if (!result.IsSuccess) return result.ToApiResult();
+        return Results.Ok(new { success = true, data = result.Value });
+    }
+
+    private static IResult MutationResult(Result result)
+    {
+        if (!result.IsSuccess) return result.ToApiResult();
+        return Results.Ok(new { success = true });
+    }
+
     // PROFILE
     public static async Task<IResult> GetProfile(ISender mediator)
     {
@@ -48,7 +62,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // EDUCATION
@@ -63,7 +77,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteEducation(
@@ -71,7 +85,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteEducationCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // EXPERIENCE
@@ -86,7 +100,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteExperience(
@@ -94,7 +108,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteExperienceCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // PROJECTS
@@ -109,7 +123,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteProject(
@@ -117,7 +131,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteProjectCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // SKILLS
@@ -132,7 +146,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteSkill(
@@ -140,7 +154,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteSkillCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // CERTIFICATIONS
@@ -155,7 +169,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteCertification(
@@ -163,7 +177,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteCertificationCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // ACHIEVEMENTS
@@ -178,7 +192,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteAchievement(
@@ -186,7 +200,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteAchievementCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // LANGUAGES
@@ -201,7 +215,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteLanguage(
@@ -209,7 +223,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteLanguageCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // SOCIAL LINKS
@@ -224,7 +238,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteSocialLink(
@@ -232,7 +246,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteSocialLinkCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // CUSTOM SECTIONS
@@ -247,7 +261,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(command);
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     public static async Task<IResult> DeleteCustomSection(
@@ -255,7 +269,7 @@ internal static class PortfolioEndpoints
         ISender mediator)
     {
         var result = await mediator.Send(new DeleteCustomSectionCommand(id));
-        return result.ToApiResult();
+        return MutationResult(result);
     }
 
     // PUBLIC PORTFOLIO

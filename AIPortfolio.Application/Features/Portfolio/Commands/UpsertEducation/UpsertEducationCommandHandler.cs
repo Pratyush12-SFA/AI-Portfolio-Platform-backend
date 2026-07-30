@@ -1,4 +1,5 @@
 using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Helpers;
 using AIPortfolio.Domain.Entites.Resume;
 using Ardalis.Result;
 using MediatR;
@@ -19,8 +20,8 @@ internal sealed class UpsertEducationCommandHandler(
             Institution = command.Institution,
             Degree = command.Degree,
             FieldOfStudy = command.FieldOfStudy,
-            StartDate = command.StartDate,
-            EndDate = command.EndDate,
+            StartDate = DateParser.ParseDate(command.StartDate),
+            EndDate = DateParser.ParseNullableDate(command.EndDate),
             IsCurrent = command.IsCurrent,
             Grade = command.Grade,
             Description = command.Description,

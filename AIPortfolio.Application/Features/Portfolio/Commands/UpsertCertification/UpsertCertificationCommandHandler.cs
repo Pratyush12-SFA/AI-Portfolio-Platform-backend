@@ -1,4 +1,5 @@
 using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Helpers;
 using AIPortfolio.Domain.Entites.Resume;
 using Ardalis.Result;
 using MediatR;
@@ -18,8 +19,8 @@ internal sealed class UpsertCertificationCommandHandler(
             Id = command.Id ?? 0,
             Name = command.Name,
             IssuingOrganization = command.IssuingOrganization,
-            IssueDate = command.IssueDate,
-            ExpiryDate = command.ExpiryDate,
+            IssueDate = DateParser.ParseNullableDate(command.IssueDate),
+            ExpiryDate = DateParser.ParseNullableDate(command.ExpiryDate),
             CredentialId = command.CredentialId,
             CredentialUrl = command.CredentialUrl,
             OrderIndex = command.OrderIndex,

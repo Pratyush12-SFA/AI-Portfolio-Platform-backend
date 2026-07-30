@@ -1,4 +1,5 @@
 using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Helpers;
 using AIPortfolio.Domain.Entites.Resume;
 using Ardalis.Result;
 using MediatR;
@@ -18,10 +19,10 @@ internal sealed class UpsertAchievementCommandHandler(
             Id = command.Id ?? 0,
             Title = command.Title,
             Description = command.Description,
-            AchievedDate = command.AchievedDate,
+            AchievedDate = DateParser.ParseNullableDate(command.AchievedDate),
             OrderIndex = command.OrderIndex,
-            CreatedBy = userInfoAccessor.Email,
-            CreatedFromIp = userInfoAccessor.GetRemoteIp(),
+            CreatedBy = userInfoAccessor.Email ?? "system",
+            CreatedFromIp = userInfoAccessor.GetRemoteIp() ?? "127.0.0.1",
             RowVersion = new byte[8]
         };
 
