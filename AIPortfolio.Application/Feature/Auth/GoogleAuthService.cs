@@ -4,6 +4,7 @@ using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Application.DTOs.Auth;
 using AIPortfolio.Domain.Entites;
 using Google.Apis.Auth;
+using Microsoft.Extensions.Options;
 
 namespace AIPortfolio.Application.Feature.Auth;
 
@@ -15,6 +16,7 @@ public sealed class GoogleAuthService : IGoogleAuthService
     private readonly IUserInfoAccessor _userInfoAccessor;
     private readonly IUserRepository _userRepository;
     private readonly IUserSessionRepository _userSessionRepository;
+    private readonly GoogleSettings _googleSettings;
 
     public GoogleAuthService(
         IUserRepository userRepository,
@@ -22,7 +24,8 @@ public sealed class GoogleAuthService : IGoogleAuthService
         IUserInfoAccessor userInfoAccessor,
         IRefreshTokenGenerator refreshTokenGenerator,
         IRefreshTokenRepository refreshTokenRepository,
-        IUserSessionRepository userSessionRepository
+        IUserSessionRepository userSessionRepository,
+        IOptions<GoogleSettings> googleSettings
     )
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
@@ -34,6 +37,7 @@ public sealed class GoogleAuthService : IGoogleAuthService
             refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
         _userSessionRepository =
             userSessionRepository ?? throw new ArgumentNullException(nameof(userSessionRepository));
+        _googleSettings = googleSettings?.Value ?? throw new ArgumentNullException(nameof(googleSettings));
     }
 
     public async Task<LoginResponse?> LoginAsync(
@@ -42,7 +46,15 @@ public sealed class GoogleAuthService : IGoogleAuthService
         GoogleJsonWebSignature.Payload payload;
         try
         {
-            payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken);
+            GoogleJsonWebSignature.ValidationSettings? settings = null;
+            if (!string.IsNullOrWhiteSpace(_googleSettings.ClientId))
+            {
+                settings = new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = new[] { _googleSettings.ClientId }
+                };
+            }
+            payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
         }
         catch (Exception ex)
         {

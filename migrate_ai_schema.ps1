@@ -1,5 +1,13 @@
 Add-Type -AssemblyName "System.Data"
-$connectionString = "Server=WELCOME\SQLEXPRESS;Database=AIPortfolioDb;Trusted_Connection=True;TrustServerCertificate=True;"
+
+$connectionString = $env:CONNECTION_STRING
+if (-not $connectionString) {
+    $connectionString = $env:ConnectionStrings__DefaultConnection
+}
+if (-not $connectionString) {
+    $connectionString = "Server=WELCOME\SQLEXPRESS;Database=AIPortfolioDb;Trusted_Connection=True;TrustServerCertificate=True;"
+}
+
 $conn = New-Object System.Data.SqlClient.SqlConnection($connectionString)
 
 $sql = @"

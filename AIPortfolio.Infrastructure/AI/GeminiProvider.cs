@@ -15,7 +15,7 @@ public sealed class GeminiProvider : IAIProvider
 
     public GeminiProvider(
         HttpClient httpClient,
-        IOptions<GeminiSettings> settings,
+        IOptions<GeminiSettings>? settings,
         IUserInfoAccessor userInfoAccessor,
         IAIUsageService usageService)
     {
@@ -182,16 +182,16 @@ public sealed class GeminiProvider : IAIProvider
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
 
-        using var stream = await response.Content.ReadAsStreamAsync();
+        await using var stream = await response.Content.ReadAsStreamAsync();
         using var reader = new StreamReader(stream);
 
         // Parse line-by-line for server-sent stream segments
-        while (!reader.EndOfStream)
+        while (reader is not { EndOfStream: true }) 
         {
             var line = await reader.ReadLineAsync();
             if (string.IsNullOrWhiteSpace(line)) continue;
 
-            // Trim out "data: " prefix if present or parse raw json chunks
+            // Trim out "data: " prefix if present or parse raw JSON chunks
             var jsonChunk = line.Trim();
             if (jsonChunk.StartsWith("[")) jsonChunk = jsonChunk.TrimStart('[');
             if (jsonChunk.EndsWith("]")) jsonChunk = jsonChunk.TrimEnd(']');
@@ -213,7 +213,7 @@ public sealed class GeminiProvider : IAIProvider
             }
             catch
             {
-                // Ignore incomplete json chunks during streaming parses
+                // Ignore incomplete JSON chunks during streaming parses
             }
 
             if (!string.IsNullOrEmpty(textPart)) yield return textPart;

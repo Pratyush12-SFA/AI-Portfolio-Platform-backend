@@ -2,10 +2,12 @@ using System.Text;
 using System.Text.Json;
 using AIPortfolio.Application.Abstractions;
 using AIPortfolio.Application.DTOs.Auth;
+using AIPortfolio.Application.Feature.Auth;
 using AIPortfolio.Domain.Entites;
 using Ardalis.Result;
 using Google.Apis.Auth;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace AIPortfolio.Application.Features.Auth.Commands.GoogleLogin;
 
@@ -17,6 +19,7 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
     private readonly IUserInfoAccessor _userInfoAccessor;
     private readonly IUserRepository _userRepository;
     private readonly IUserSessionRepository _userSessionRepository;
+    private readonly GoogleSettings _googleSettings;
 
     public GoogleLoginCommandHandler(
         IUserRepository userRepository,
@@ -24,7 +27,8 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
         IUserInfoAccessor userInfoAccessor,
         IRefreshTokenGenerator refreshTokenGenerator,
         IRefreshTokenRepository refreshTokenRepository,
-        IUserSessionRepository userSessionRepository)
+        IUserSessionRepository userSessionRepository,
+        IOptions<GoogleSettings> googleSettings)
     {
         _userRepository = userRepository;
         _jwtTokenGenerator = jwtTokenGenerator;
@@ -32,6 +36,7 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
         _refreshTokenGenerator = refreshTokenGenerator;
         _refreshTokenRepository = refreshTokenRepository;
         _userSessionRepository = userSessionRepository;
+        _googleSettings = googleSettings.Value;
     }
 
     public async Task<Result<LoginResponse>> Handle(GoogleLoginCommand command, CancellationToken cancellationToken)
@@ -39,7 +44,15 @@ internal sealed class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCom
         GoogleJsonWebSignature.Payload payload;
         try
         {
-            payload = await GoogleJsonWebSignature.ValidateAsync(command.IdToken);
+            GoogleJsonWebSignature.ValidationSettings? settings = null;
+            if (!string.IsNullOrWhiteSpace(_googleSettings.ClientId))
+            {
+                settings = new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = new[] { _googleSettings.ClientId }
+                };
+            }
+            payload = await GoogleJsonWebSignature.ValidateAsync(command.IdToken, settings);
         }
         catch (Exception ex)
         {

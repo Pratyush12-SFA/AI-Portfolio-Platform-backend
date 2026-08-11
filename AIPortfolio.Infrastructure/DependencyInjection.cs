@@ -1,4 +1,5 @@
 using AIPortfolio.Application.Abstractions;
+using AIPortfolio.Application.Feature.Auth;
 using AIPortfolio.Infrastructure.AI;
 using AIPortfolio.Infrastructure.Authentication;
 using AIPortfolio.Infrastructure.Configurations;
@@ -19,6 +20,9 @@ public static class DependencyInjection
 
         services.Configure<GeminiSettings>(
             configuration.GetSection("GeminiSettings"));
+
+        services.Configure<GoogleSettings>(
+            configuration.GetSection("GoogleSettings"));
 
         services.AddScoped<IDateHandler, DateHandler>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
