@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yaml" />
+  </Folder>
   <Project Path="AIPortfolio.API/AIPortfolio.API.csproj" />
   <Project Path="AIPortfolio.Application/AIPortfolio.Application.csproj" />
   <Project Path="AIPortfolio.Domain/AIPortfolio.Domain.csproj" />

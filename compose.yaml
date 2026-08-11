@@ -1,0 +1,64 @@
+﻿version: "3.9"
+
+services:
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ascend-sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: "Ascend@123456"
+
+    ports:
+      - "1433:1433"
+
+    volumes:
+      - sql_data:/var/opt/mssql
+
+    networks:
+      - ascend-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: ascend-api
+
+    depends_on:
+      - sqlserver
+
+    ports:
+      - "7043:8080"
+
+    environment:
+
+      ASPNETCORE_ENVIRONMENT: Development
+
+      ConnectionStrings__DefaultConnection: >
+        Server=sqlserver;
+        Database=AIPortfolioDb;
+        User Id=sa;
+        Password=Ascend@123456;
+        TrustServerCertificate=True;
+        Encrypt=False;
+
+      JwtSettings__Issuer: AIPortfolio
+      JwtSettings__Audience: AIPortfolioUsers
+      JwtSettings__SecretKey: AIPortfolio2026SuperSecretKeyForJwtAuthentication
+
+      GeminiSettings__GeminiApiKey: PLACEHOLDER_KEY
+      GeminiSettings__DefaultModel: gemini-2.5-flash
+
+    networks:
+      - ascend-network
+
+volumes:
+
+  sql_data:
+
+networks:
+
+  ascend-network:

@@ -6,8 +6,10 @@ using AIPortfolio.Application;
 using AIPortfolio.Infrastructure;
 using AIPortfolio.Infrastructure.Configurations;
 using AIPortfolio.Persistence;
+using AIPortfolio.Persistence.Data;
 using AIPortfolio.Persistence.Seeding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
@@ -48,38 +50,44 @@ builder.Services.AddCors(options =>
 var jwtSettings =
     builder.Configuration
         .GetSection("JwtSettings")
-        .Get<JwtSettings>()!;
+        .Get<JwtSettings>();
 
 builder.Services
     .AddAuthentication(
         JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters =
-            new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
+        if (jwtSettings?.SecretKey != null)
+            options.TokenValidationParameters =
+                new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
 
-                ValidIssuer = jwtSettings.Issuer,
+                    ValidIssuer = jwtSettings.Issuer,
 
-                ValidAudience = jwtSettings.Audience,
+                    ValidAudience = jwtSettings.Audience,
 
-                IssuerSigningKey =
-                    new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(
-                            jwtSettings.SecretKey))
-            };
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(
+                                jwtSettings.SecretKey ?? throw new InvalidOperationException()))
+                };
     });
 
-
+  
 builder.Services.AddAuthorization();
 
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
+using var scope = app.Services.CreateScope();
+var db =
+    scope.ServiceProvider.GetRequiredService<AIPortfolioDbContext>();
+db.Database.Migrate();
 
 if (app.Environment.IsDevelopment())
 {

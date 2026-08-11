@@ -5,7 +5,7 @@ namespace AIPortfolio.API.ApiErrors;
 
 public sealed class InputValidationProblemDetails : ProblemDetails, IApiProblemDetails
 {
-    public InputValidationProblemDetails(IEnumerable<ValidationError> errors)
+    public InputValidationProblemDetails(IEnumerable<ValidationError>? errors)
     {
         Title = "Validation errors.";
         Detail = "One or more validation errors occurred.";

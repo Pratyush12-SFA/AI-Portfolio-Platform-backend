@@ -5,7 +5,7 @@ namespace AIPortfolio.Persistence.Connections;
 
 public sealed class DapperContext
 {
-    private readonly string _connectionString;
+    private readonly string? _connectionString;
 
     public DapperContext(string? connectionString)
     {
