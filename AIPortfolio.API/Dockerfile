@@ -1,4 +1,7 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+﻿# =========================
+# Runtime Base
+# =========================
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 
 USER root
 
@@ -7,12 +10,16 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 USER $APP_UID
+
 WORKDIR /app
 
 EXPOSE 8080
 EXPOSE 8081
 
 
+# =========================
+# Build
+# =========================
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 ARG BUILD_CONFIGURATION=Release
@@ -31,21 +38,29 @@ COPY . .
 
 WORKDIR "/src/AIPortfolio.API"
 
-RUN dotnet build "./AIPortfolio.API.csproj" \
+RUN dotnet build "AIPortfolio.API.csproj" \
     -c $BUILD_CONFIGURATION \
-    -o /app/build
+    -o /app/build \
+    --no-restore
 
 
+# =========================
+# Publish
+# =========================
 FROM build AS publish
 
 ARG BUILD_CONFIGURATION=Release
 
-RUN dotnet publish "./AIPortfolio.API.csproj" \
+RUN dotnet publish "AIPortfolio.API.csproj" \
     -c $BUILD_CONFIGURATION \
     -o /app/publish \
-    /p:UseAppHost=false
+    /p:UseAppHost=false \
+    --no-restore
 
 
+# =========================
+# Final Runtime Image
+# =========================
 FROM base AS final
 
 WORKDIR /app
