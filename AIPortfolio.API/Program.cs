@@ -82,8 +82,11 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
+app.MapHealthChecks("/health");
 using var scope = app.Services.CreateScope();
 var db =
     scope.ServiceProvider.GetRequiredService<AIPortfolioDbContext>();
