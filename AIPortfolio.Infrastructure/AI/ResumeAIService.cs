@@ -78,7 +78,7 @@ public sealed class ResumeAIService : IResumeAIService
         return await _aiProvider.GenerateAsync(
             systemPrompt,
             text,
-            "gemini-2.5-flash");
+            "gemini-3.6-flash");
     }
 
     public async Task<IEnumerable<string>> RewriteBulletPointsAsync(IEnumerable<string> bullets)
@@ -92,7 +92,7 @@ public sealed class ResumeAIService : IResumeAIService
         var responseJson = await _aiProvider.GenerateAsync(
             systemPrompt,
             userPrompt,
-            "gemini-2.5-flash",
+            "gemini-3.6-flash",
             true);
 
         try
@@ -116,7 +116,7 @@ public sealed class ResumeAIService : IResumeAIService
         return await _aiProvider.GenerateAsync(
             systemPrompt,
             $"Candidate Background:\n{experienceAndSkills}",
-            "gemini-2.5-flash");
+            "gemini-3.6-flash");
     }
 
     public async Task<IEnumerable<string>> SuggestMissingSkillsAsync(string experienceText, string targetRole)
@@ -130,7 +130,7 @@ public sealed class ResumeAIService : IResumeAIService
         var responseJson = await _aiProvider.GenerateAsync(
             systemPrompt,
             userPrompt,
-            "gemini-2.5-flash",
+            "gemini-3.6-flash",
             true);
 
         try

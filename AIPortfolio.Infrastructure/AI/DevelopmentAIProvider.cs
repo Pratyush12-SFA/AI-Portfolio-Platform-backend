@@ -48,6 +48,23 @@ public sealed class DevelopmentAIProvider : IAIProvider
                 ]");
         }
 
+        if (promptLower.Contains("coach") || promptLower.Contains("careercoach"))
+        {
+            var userText = userPrompt.ToLowerInvariant();
+            if (userText.Contains("hello") || userText.Contains("hi ") || userText.Equals("hi") || userText.Contains("hey"))
+            {
+                return Task.FromResult(
+                    "Hi! I am your AI career coach. How can I help you improve your resume, portfolio, or prepare for technical coding interviews today?");
+            }
+            if (userText.Contains("resume") || userText.Contains("improve") || userText.Contains("portfolio"))
+            {
+                return Task.FromResult(
+                    "To improve your resume and portfolio, I suggest focusing on quantifiable impact (e.g., latency reduction, cost savings) and ensuring your core technical stack matches the target job descriptions. What specific roles are you targeting?");
+            }
+            return Task.FromResult(
+                "Hi! As your career coach, I reviewed your profile. Let's work together to optimize your resume bullets, build an impressive portfolio, or prepare for coding interviews. What would you like to focus on first?");
+        }
+
         if (promptLower.Contains("summary") || promptLower.Contains("resumesummary"))
             return Task.FromResult(
                 "Highly skilled and results-oriented Full Stack .NET Developer with 5+ years of experience designing, building, and deploying scalable web applications. Proficient in ASP.NET Core, React 19, and cloud technologies. Proven track record of optimizing database performance and implementing robust, clean code architectures.");
@@ -59,10 +76,6 @@ public sealed class DevelopmentAIProvider : IAIProvider
         if (promptLower.Contains("improve") || promptLower.Contains("resumeimprove"))
             return Task.FromResult(
                 "Polished Section: Experienced Software Engineer specializing in designing and implementing scalable backend services using .NET 10 and modern React 19 frontends. Collaborated with cross-functional teams to deliver secure, high-traffic APIs.");
-
-        if (promptLower.Contains("coach") || promptLower.Contains("careercoach"))
-            return Task.FromResult(
-                "Hi Pratyush! As your career coach, I reviewed your profile. Your experience with .NET Core and React is impressive. To stand out for senior roles, I suggest emphasizing your impact using metrics (e.g., 'reduced latency by 30%') and adding containerization experience with Docker. Let's discuss your next steps!");
 
         return Task.FromResult(
             "I am Antigravity, your development AI assistant. Let me know how I can help you with your resume, portfolio, or coding interviews!");
