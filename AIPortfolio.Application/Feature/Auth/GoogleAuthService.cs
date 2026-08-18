@@ -8,37 +8,24 @@ using Microsoft.Extensions.Options;
 
 namespace AIPortfolio.Application.Feature.Auth;
 
-public sealed class GoogleAuthService : IGoogleAuthService
+public sealed class GoogleAuthService(
+    IUserRepository userRepository,
+    IJwtTokenGenerator jwtTokenGenerator,
+    IUserInfoAccessor userInfoAccessor,
+    IRefreshTokenGenerator refreshTokenGenerator,
+    IRefreshTokenRepository refreshTokenRepository,
+    IUserSessionRepository userSessionRepository,
+    IOptions<GoogleSettings>? googleSettings)
+    : IGoogleAuthService
 {
-    private readonly IJwtTokenGenerator _jwtTokenGenerator;
-    private readonly IRefreshTokenGenerator _refreshTokenGenerator;
-    private readonly IRefreshTokenRepository _refreshTokenRepository;
-    private readonly IUserInfoAccessor _userInfoAccessor;
-    private readonly IUserRepository _userRepository;
-    private readonly IUserSessionRepository _userSessionRepository;
-    private readonly GoogleSettings _googleSettings;
-
-    public GoogleAuthService(
-        IUserRepository userRepository,
-        IJwtTokenGenerator jwtTokenGenerator,
-        IUserInfoAccessor userInfoAccessor,
-        IRefreshTokenGenerator refreshTokenGenerator,
-        IRefreshTokenRepository refreshTokenRepository,
-        IUserSessionRepository userSessionRepository,
-        IOptions<GoogleSettings> googleSettings
-    )
-    {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-        _jwtTokenGenerator = jwtTokenGenerator ?? throw new ArgumentNullException(nameof(jwtTokenGenerator));
-        _userInfoAccessor = userInfoAccessor ?? throw new ArgumentNullException(nameof(userInfoAccessor));
-        _refreshTokenRepository = refreshTokenRepository
-                                  ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
-        _refreshTokenGenerator =
-            refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
-        _userSessionRepository =
-            userSessionRepository ?? throw new ArgumentNullException(nameof(userSessionRepository));
-        _googleSettings = googleSettings?.Value ?? throw new ArgumentNullException(nameof(googleSettings));
-    }
+    private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator ?? throw new ArgumentNullException(nameof(jwtTokenGenerator));
+    private readonly IRefreshTokenGenerator _refreshTokenGenerator = refreshTokenGenerator ?? throw new ArgumentNullException(nameof(refreshTokenGenerator));
+    private readonly IRefreshTokenRepository _refreshTokenRepository = refreshTokenRepository
+                                                                       ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
+    private readonly IUserInfoAccessor _userInfoAccessor = userInfoAccessor ?? throw new ArgumentNullException(nameof(userInfoAccessor));
+    private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+    private readonly IUserSessionRepository _userSessionRepository = userSessionRepository ?? throw new ArgumentNullException(nameof(userSessionRepository));
+    private readonly GoogleSettings _googleSettings = googleSettings?.Value ?? throw new ArgumentNullException(nameof(googleSettings));
 
     public async Task<LoginResponse?> LoginAsync(
         GoogleLoginRequest request)
@@ -51,7 +38,7 @@ public sealed class GoogleAuthService : IGoogleAuthService
             {
                 settings = new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { _googleSettings.ClientId }
+                    Audience = [_googleSettings.ClientId]
                 };
             }
             payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, settings);
@@ -62,15 +49,27 @@ public sealed class GoogleAuthService : IGoogleAuthService
                 $"[WARNING] Google token validation failed: {ex.Message}. Falling back to insecure decode.");
             try
             {
-                var parts = request.IdToken.Split('.');
-                if (parts.Length == 3)
+                var parts = request.IdToken?.Split('.');
+                if (parts != null && parts.Length == 3)
                 {
                     var base64 = parts[1].Replace('-', '+').Replace('_', '/');
                     var mod4 = base64.Length % 4;
                     if (mod4 > 0) base64 += new string('=', 4 - mod4);
                     var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
-                    payload = JsonSerializer.Deserialize<GoogleJsonWebSignature.Payload>(decoded,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+                    GoogleJsonWebSignature.Payload? decodedPayload =
+                        JsonSerializer.Deserialize<GoogleJsonWebSignature.Payload>(
+                            decoded,
+                            new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
+                    if (decodedPayload is null || string.IsNullOrWhiteSpace(decodedPayload.Email))
+                    {
+                        throw new InvalidOperationException("Failed to decode valid payload.");
+                    }
+
+                    payload = decodedPayload;
+                    
                     if (payload == null || string.IsNullOrEmpty(payload.Email))
                         throw new InvalidOperationException("Failed to decode valid payload");
                 }
