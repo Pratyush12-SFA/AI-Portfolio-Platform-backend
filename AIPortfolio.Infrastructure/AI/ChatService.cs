@@ -128,19 +128,37 @@ public sealed class ChatService : IChatService
                 userContext.AppendLine($"- {cert.Name} ({cert.IssueDate?.ToString("yyyy-MM")})");
         }
 
-        systemPrompt = $"{systemPrompt}\n\n{userContext}";
+        var systemInstructionBuilder = new StringBuilder();
+        systemInstructionBuilder.AppendLine("SYSTEM:");
+        systemInstructionBuilder.AppendLine(systemPrompt);
+        systemInstructionBuilder.AppendLine();
+        systemInstructionBuilder.AppendLine("PROFILE/RESUME CONTEXT:");
+        systemInstructionBuilder.AppendLine(userContext.ToString());
+        systemInstructionBuilder.AppendLine();
+        systemInstructionBuilder.AppendLine("INSTRUCTIONS:");
+        systemInstructionBuilder.AppendLine("- Answer the current user message.");
+        systemInstructionBuilder.AppendLine("- Use resume/profile information only when relevant.");
+        systemInstructionBuilder.AppendLine("- Maintain conversational continuity.");
+        systemInstructionBuilder.AppendLine("- Do not repeat previous responses unnecessarily.");
+        systemInstructionBuilder.AppendLine("- Do not return the user's resume summary for simple greetings.");
+        systemInstructionBuilder.AppendLine("- Ask useful follow-up questions when appropriate.");
+        systemInstructionBuilder.AppendLine("- Behave as a conversational career coach.");
 
         // 5. Construct user/history chat stream prompt
         var conversationContext = new StringBuilder();
-        foreach (var msg in
-                 history.Take(history.Count() - 1)) // skip the user message we just added to send as current userPrompt
+        conversationContext.AppendLine("CONVERSATION HISTORY:");
+        foreach (var msg in history.Take(history.Count() - 1))
+        {
             conversationContext.AppendLine($"{msg.Role}: {msg.Content}");
-        conversationContext.AppendLine($"User: {userContent}");
+        }
+        conversationContext.AppendLine();
+        conversationContext.AppendLine("CURRENT USER MESSAGE:");
+        conversationContext.AppendLine(userContent);
 
-        // 6. Query Gemini Provider using gemini-2.5-flash for coaching chat
-        var modelName = "gemini-2.5-flash";
+        // 6. Query Gemini Provider using gemini-3.6-flash for coaching chat
+        var modelName = "gemini-3.6-flash";
         var responseText = await _aiProvider.GenerateAsync(
-            systemPrompt,
+            systemInstructionBuilder.ToString(),
             conversationContext.ToString(),
             modelName);
 
